@@ -1,0 +1,1 @@
+### The ReadMe for the Selenium Grid Hub Launcher has been moved to: [pythonselenium/utilities/selenium_grid/ReadMe.md](/pythonselenium/utilities/selenium_grid/ReadMe.md) and all related code has been moved to [pythonselenium/utilities/selenium_grid](/pythonselenium/utilities/selenium_grid)
