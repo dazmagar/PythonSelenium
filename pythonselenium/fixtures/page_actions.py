@@ -21,6 +21,7 @@ By.PARTIAL_LINK_TEXT   # "partial link text"
 import codecs
 import os
 import time
+from contextlib import suppress
 
 import fasteners
 from selenium.common.exceptions import (
@@ -61,7 +62,7 @@ def is_element_present(driver, selector, by="css selector"):
         return False
 
 
-def is_element_visible(driver, selector, by="css selector"):
+def is_element_visible(driver, selector, by="css selector") -> bool:
     """
     Returns whether the specified element selector is visible on the page.
     @Params
@@ -254,15 +255,7 @@ def timeout_exception(exception, message):
     raise exc(msg)
 
 
-def hover_and_click(
-    driver,
-    hover_selector,
-    click_selector,
-    hover_by="css selector",
-    click_by="css selector",
-    timeout=settings.SMALL_TIMEOUT,
-    js_click=False,
-):
+def hover_and_click(driver, hover_selector, click_selector, hover_by="css selector", click_by="css selector", timeout=settings.SMALL_TIMEOUT, js_click=False):
     """
     Fires the hover event for a specified element by a given selector, then
     clicks on another element specified. Useful for dropdown hover based menus.
@@ -304,13 +297,7 @@ def hover_and_click(
     timeout_exception(NoSuchElementException, message)
 
 
-def hover_element_and_click(
-    driver,
-    element,
-    click_selector,
-    click_by="css selector",
-    timeout=settings.SMALL_TIMEOUT,
-):
+def hover_element_and_click(driver, element, click_selector, click_by="css selector", timeout=settings.SMALL_TIMEOUT):
     """
     Similar to hover_and_click(), but assumes top element is already found.
     """
@@ -339,13 +326,7 @@ def hover_element_and_click(
     timeout_exception(NoSuchElementException, message)
 
 
-def hover_element_and_double_click(
-    driver,
-    element,
-    click_selector,
-    click_by="css selector",
-    timeout=settings.SMALL_TIMEOUT,
-):
+def hover_element_and_double_click(driver, element, click_selector, click_by="css selector", timeout=settings.SMALL_TIMEOUT):
     start_ms = time.time() * 1000.0
     stop_ms = start_ms + (timeout * 1000.0)
     hover = ActionChains(driver).move_to_element(element)
@@ -374,14 +355,7 @@ def hover_element_and_double_click(
     timeout_exception(NoSuchElementException, message)
 
 
-def wait_for_element_present(
-    driver,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-    original_selector=None,
-    ignore_test_time_limit=False,
-):
+def wait_for_element_present(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT, original_selector=None, ignore_test_time_limit=False):
     """
     Searches for the specified element by the given selector. Returns the
     element object if it exists in the HTML. (The element can be invisible.)
@@ -427,14 +401,7 @@ def wait_for_element_present(
         return element
 
 
-def wait_for_element_visible(
-    driver,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-    original_selector=None,
-    ignore_test_time_limit=False,
-):
+def wait_for_element_visible(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT, original_selector=None, ignore_test_time_limit=False):
     """
     Searches for the specified element by the given selector. Returns the
     element object if the element is present and visible on the page.
@@ -504,13 +471,7 @@ def wait_for_element_visible(
         return element
 
 
-def wait_for_text_visible(
-    driver,
-    text,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_text_visible(driver, text, selector, by="css selector", timeout=settings.LARGE_TIMEOUT):
     """
     Searches for the specified element by the given selector. Returns the
     element object if the text is present in the element and visible
@@ -598,13 +559,7 @@ def wait_for_text_visible(
         return element
 
 
-def wait_for_exact_text_visible(
-    driver,
-    text,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_exact_text_visible(driver, text, selector, by="css selector", timeout=settings.LARGE_TIMEOUT):
     """
     Searches for the specified element by the given selector. Returns the
     element object if the text matches exactly with the text in the element,
@@ -692,14 +647,7 @@ def wait_for_exact_text_visible(
         return element
 
 
-def wait_for_attribute(
-    driver,
-    selector,
-    attribute,
-    value=None,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_attribute(driver, selector, attribute, value=None, by="css selector", timeout=settings.LARGE_TIMEOUT):
     """
     Searches for the specified element attribute by the given selector.
     Returns the element object if the expected attribute is present
@@ -773,13 +721,7 @@ def wait_for_attribute(
         return element
 
 
-def wait_for_element_clickable(
-    driver,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-    original_selector=None,
-):
+def wait_for_element_clickable(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT, original_selector=None):
     """
     Searches for the specified element by the given selector. Returns the
     element object if the element is present, visible, & clickable on the page.
@@ -869,13 +811,7 @@ def wait_for_element_clickable(
         return element
 
 
-def wait_for_element_absent(
-    driver,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-    original_selector=None,
-):
+def wait_for_element_absent(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT, original_selector=None):
     """
     Searches for the specified element by the given selector.
     Raises an exception if the element is still present after the
@@ -912,13 +848,7 @@ def wait_for_element_absent(
     timeout_exception(Exception, message)
 
 
-def wait_for_element_not_visible(
-    driver,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-    original_selector=None,
-):
+def wait_for_element_not_visible(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT, original_selector=None):
     """
     Searches for the specified element by the given selector.
     Raises an exception if the element is still visible after the
@@ -958,13 +888,7 @@ def wait_for_element_not_visible(
     timeout_exception(Exception, message)
 
 
-def wait_for_text_not_visible(
-    driver,
-    text,
-    selector="html",
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_text_not_visible(driver, text, selector="html", by="css selector", timeout=settings.LARGE_TIMEOUT):
     """
     Searches for the text in the element of the given selector on the page.
     Returns True if the text is not visible on the page within the timeout.
@@ -1001,13 +925,7 @@ def wait_for_text_not_visible(
     timeout_exception(Exception, message)
 
 
-def wait_for_exact_text_not_visible(
-    driver,
-    text,
-    selector="html",
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_exact_text_not_visible(driver, text, selector="html", by="css selector", timeout=settings.LARGE_TIMEOUT):
     """
     Searches for the text in the element of the given selector on the page.
     Returns True if the element is missing the exact text within the timeout.
@@ -1044,12 +962,7 @@ def wait_for_exact_text_not_visible(
     timeout_exception(Exception, message)
 
 
-def wait_for_non_empty_text_visible(
-    driver,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_non_empty_text_visible(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT):
     """
     Searches for any text in the element of the given selector.
     Returns the element if it has visible text within the timeout.
@@ -1118,14 +1031,7 @@ def wait_for_non_empty_text_visible(
         timeout_exception(TextNotVisibleException, message)
 
 
-def wait_for_attribute_not_present(
-    driver,
-    selector,
-    attribute,
-    value=None,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_attribute_not_present(driver, selector, attribute, value=None, by="css selector", timeout=settings.LARGE_TIMEOUT):
     """
     Searches for the specified element attribute by the given selector.
     Returns True if the attribute isn't present on the page within the timeout.
@@ -1367,12 +1273,7 @@ def __switch_to_window(driver, window_handle, uc_lock=True):
     return True
 
 
-def switch_to_window(
-    driver,
-    window,
-    timeout=settings.SMALL_TIMEOUT,
-    uc_lock=True,
-):
+def switch_to_window(driver, window, timeout=settings.SMALL_TIMEOUT, uc_lock=True):
     """
     Wait for a window to appear, and switch to it. This should be usable
     as a drop-in replacement for driver.switch_to.window().
@@ -1464,10 +1365,8 @@ def click_if_visible(driver, selector, by="css selector", timeout=0):
     if is_element_visible(driver, selector, by=by):
         click(driver, selector, by=by, timeout=1)
     elif timeout > 0:
-        try:
+        with suppress(Exception):
             wait_for_element_visible(driver, selector, by=by, timeout=timeout)
-        except Exception:
-            pass
         if is_element_visible(driver, selector, by=by):
             click(driver, selector, by=by, timeout=1)
 
@@ -1587,55 +1486,27 @@ def assert_element_not_visible(driver, selector, by="css selector", timeout=sett
     )
 
 
-def assert_text(
-    driver,
-    text,
-    selector="html",
-    by="css selector",
-    timeout=settings.SMALL_TIMEOUT,
-):
+def assert_text(driver, text, selector="html", by="css selector", timeout=settings.SMALL_TIMEOUT):
     selector, by = page_utils.recalculate_selector(selector, by)
     wait_for_text_visible(driver, text.strip(), selector, by=by, timeout=timeout)
 
 
-def assert_exact_text(
-    driver,
-    text,
-    selector="html",
-    by="css selector",
-    timeout=settings.SMALL_TIMEOUT,
-):
+def assert_exact_text(driver, text, selector="html", by="css selector", timeout=settings.SMALL_TIMEOUT):
     selector, by = page_utils.recalculate_selector(selector, by)
     wait_for_exact_text_visible(driver, text.strip(), selector, by=by, timeout=timeout)
 
 
-def assert_non_empty_text(
-    driver,
-    selector,
-    by="css selector",
-    timeout=settings.SMALL_TIMEOUT,
-):
+def assert_non_empty_text(driver, selector, by="css selector", timeout=settings.SMALL_TIMEOUT):
     selector, by = page_utils.recalculate_selector(selector, by)
     wait_for_non_empty_text_visible(driver, selector, by=by, timeout=timeout)
 
 
-def assert_text_not_visible(
-    driver,
-    text,
-    selector="html",
-    by="css selector",
-    timeout=settings.SMALL_TIMEOUT,
-):
+def assert_text_not_visible(driver, text, selector="html", by="css selector", timeout=settings.SMALL_TIMEOUT):
     selector, by = page_utils.recalculate_selector(selector, by)
     wait_for_text_not_visible(driver, text.strip(), selector, by=by, timeout=timeout)
 
 
-def wait_for_element(
-    driver,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_element(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT):
     original_selector = None
     if page_utils.is_valid_by(by):
         original_selector = selector
@@ -1651,12 +1522,7 @@ def wait_for_element(
     )
 
 
-def wait_for_selector(
-    driver,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_selector(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT):
     original_selector = None
     if page_utils.is_valid_by(by):
         original_selector = selector
@@ -1672,13 +1538,7 @@ def wait_for_selector(
     )
 
 
-def wait_for_text(
-    driver,
-    text,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_text(driver, text, selector, by="css selector", timeout=settings.LARGE_TIMEOUT):
     selector, by = page_utils.recalculate_selector(selector, by)
     return wait_for_text_visible(
         driver=driver,
@@ -1689,13 +1549,7 @@ def wait_for_text(
     )
 
 
-def wait_for_exact_text(
-    driver,
-    text,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_exact_text(driver, text, selector, by="css selector", timeout=settings.LARGE_TIMEOUT):
     selector, by = page_utils.recalculate_selector(selector, by)
     return wait_for_exact_text_visible(
         driver=driver,
@@ -1706,12 +1560,7 @@ def wait_for_exact_text(
     )
 
 
-def wait_for_non_empty_text(
-    driver,
-    selector,
-    by="css selector",
-    timeout=settings.LARGE_TIMEOUT,
-):
+def wait_for_non_empty_text(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT):
     selector, by = page_utils.recalculate_selector(selector, by)
     return wait_for_non_empty_text_visible(
         driver=driver,

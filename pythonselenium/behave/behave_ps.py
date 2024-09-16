@@ -98,6 +98,7 @@ behave -D agent="User Agent String" -D demo
 -D external-pdf  (Set Chromium "plugins.always_open_pdf_externally":True.)
 -D timeout-multiplier=MULTIPLIER  (Multiplies the default timeout values.)
 """
+
 import ast
 import os
 import re
@@ -270,17 +271,9 @@ def get_configured_PS(context):
                 ps.browser = browser
                 browsers.add(browser)
             elif browser == "true":
-                raise Exception(
-                    '\nThe "browser" argument requires a value!'
-                    "\nChoose from %s."
-                    '\nEg. -D browser="edge"' % valid_browsers
-                )
+                raise Exception('\nThe "browser" argument requires a value!' "\nChoose from %s." '\nEg. -D browser="edge"' % valid_browsers)
             else:
-                raise Exception(
-                    '\n"%s" is not a valid "browser" selection!'
-                    "\nChoose from %s."
-                    '\nEg. -D browser="edge"' % (browser, valid_browsers)
-                )
+                raise Exception('\n"%s" is not a valid "browser" selection!' "\nChoose from %s." '\nEg. -D browser="edge"' % (browser, valid_browsers))
             continue
         # Handle: -D BROWSER
         if low_key in valid_browsers:
@@ -325,17 +318,9 @@ def get_configured_PS(context):
             if protocol in ["http", "https"]:
                 ps.protocol = protocol
             elif protocol == "true":
-                raise Exception(
-                    '\nThe Selenium Grid "protocol" argument requires a value!'
-                    '\nChoose from ["http", "https"]'
-                    '\nEg. -D protocol="https"'
-                )
+                raise Exception('\nThe Selenium Grid "protocol" argument requires a value!' '\nChoose from ["http", "https"]' '\nEg. -D protocol="https"')
             else:
-                raise Exception(
-                    '\n"%s" is not a valid Selenium Grid "protocol" selection!'
-                    '\nChoose from ["http", "https"]'
-                    '\nEg. -D protocol="https"' % protocol
-                )
+                raise Exception('\n"%s" is not a valid Selenium Grid "protocol" selection!' '\nChoose from ["http", "https"]' '\nEg. -D protocol="https"' % protocol)
             continue
         # Handle: -D server=SERVERNAME / servername=SERVERNAME
         if low_key in ["server", "servername"]:
@@ -372,10 +357,7 @@ def get_configured_PS(context):
             variables = userdata[key]
             if variables and isinstance(variables, str) and len(variables) > 0:
                 bad_input = False
-                if (
-                    not variables.startswith("{")
-                    or not variables.endswith("}")
-                ):
+                if not variables.startswith("{") or not variables.endswith("}"):
                     bad_input = True
                 else:
                     try:
@@ -385,10 +367,7 @@ def get_configured_PS(context):
                     except Exception:
                         bad_input = True
                 if bad_input:
-                    raise Exception(
-                        '\nExpecting a Python dictionary for "variables"!'
-                        "\nEg. -D variables=\"{'KEY':'VALUE', 'KEY2':123}\""
-                    )
+                    raise Exception('\nExpecting a Python dictionary for "variables"!' "\nEg. -D variables=\"{'KEY':'VALUE', 'KEY2':123}\"")
             else:
                 variables = {}
             continue
@@ -403,17 +382,9 @@ def get_configured_PS(context):
                 ps.environment = environment
                 ps.env = environment
             elif environment == "true":
-                raise Exception(
-                    '\nThe "env" argument requires a value!'
-                    "\nChoose from %s."
-                    '\nEg. -D env="production"' % valid_envs
-                )
+                raise Exception('\nThe "env" argument requires a value!' "\nChoose from %s." '\nEg. -D env="production"' % valid_envs)
             else:
-                raise Exception(
-                    '\n"%s" is not a valid "env" selection!'
-                    "\nChoose from %s."
-                    '\nEg. -D env="production"' % (environment, valid_envs)
-                )
+                raise Exception('\n"%s" is not a valid "env" selection!' "\nChoose from %s." '\nEg. -D env="production"' % (environment, valid_envs))
             continue
         # Handle: -D user-agent=STRING / user_agent=STRING / agent=STRING
         if low_key in ["user-agent", "user_agent", "agent"]:
@@ -483,17 +454,9 @@ def get_configured_PS(context):
             if page_load_strategy in ["normal", "eager", "none"]:
                 ps.page_load_strategy = page_load_strategy
             elif page_load_strategy == "true":
-                raise Exception(
-                    '\nThe "pls" / "page-load-strategy" arg requires a value!'
-                    '\nChoose from ["normal", "eager", "none"]'
-                    '\nEg. -D pls="none"'
-                )
+                raise Exception('\nThe "pls" / "page-load-strategy" arg requires a value!' '\nChoose from ["normal", "eager", "none"]' '\nEg. -D pls="none"')
             else:
-                raise Exception(
-                    '\n"%s" is not a valid "pls" / "page-load-strategy" value!'
-                    '\nChoose from ["normal", "eager", "none"]'
-                    '\nEg. -D pls="none"' % page_load_strategy
-                )
+                raise Exception('\n"%s" is not a valid "pls" / "page-load-strategy" value!' '\nChoose from ["normal", "eager", "none"]' '\nEg. -D pls="none"' % page_load_strategy)
             continue
         # Handle: -D database-env=ENVIRONMENT / database_env=ENVIRONMENT
         if low_key in ["database-env", "database_env"]:
@@ -501,18 +464,9 @@ def get_configured_PS(context):
             if database_env in valid_envs:
                 ps.database_env = database_env
             elif database_env == "true":
-                raise Exception(
-                    '\nThe "database-env" argument requires a value!'
-                    "\nChoose from %s."
-                    '\nEg. -D database-env="production"' % valid_envs
-                )
+                raise Exception('\nThe "database-env" argument requires a value!' "\nChoose from %s." '\nEg. -D database-env="production"' % valid_envs)
             else:
-                raise Exception(
-                    '\n"%s" is not a valid "database-env" selection!'
-                    "\nChoose from %s."
-                    '\nEg. -D database-env="production"'
-                    % (environment, valid_envs)
-                )
+                raise Exception('\n"%s" is not a valid "database-env" selection!' "\nChoose from %s." '\nEg. -D database-env="production"' % (environment, valid_envs))
             continue
         # Handle: -D archive-logs / archive_logs
         if low_key in ["archive-logs", "archive_logs"]:
@@ -573,9 +527,7 @@ def get_configured_PS(context):
             ps._reuse_session = True
             continue
         # Handle: -D rcs / rfs / reuse-class-session / reuse-feature-session
-        if low_key in [
-            "rcs", "rfs", "reuse-class-session", "reuse-feature-session"
-        ]:
+        if low_key in ["rcs", "rfs", "reuse-class-session", "reuse-feature-session"]:
             ps._reuse_session = True
             ps._reuse_class_session = True
             continue
@@ -607,15 +559,11 @@ def get_configured_PS(context):
             ps.window_size = window_size
             continue
         # Handle: -D maximize / fullscreen / maximize-window
-        if low_key in [
-            "maximize", "fullscreen", "maximize-window", "maximize_window"
-        ]:
+        if low_key in ["maximize", "fullscreen", "maximize-window", "maximize_window"]:
             ps.maximize_option = True
             continue
         # Handle: -D screenshot / save-screenshot / save_screenshot / ss
-        if low_key in [
-            "screenshot", "save-screenshot", "save_screenshot", "ss"
-        ]:
+        if low_key in ["screenshot", "save-screenshot", "save_screenshot", "ss"]:
             ps.save_screenshot_after_test = True
             continue
         # Handle: -D no-screenshot / no_screenshot / ns
@@ -800,9 +748,7 @@ def get_configured_PS(context):
             ps.swiftshader = True
             continue
         # Handle: -D adblock / ad-block / ad_block / block-ads / block_ads
-        if low_key in [
-            "adblock", "ad-block", "ad_block", "block-ads", "block_ads"
-        ]:
+        if low_key in ["adblock", "ad-block", "ad_block", "block-ads", "block_ads"]:
             ps.ad_block_on = True
             continue
         # Handle: -D highlights=NUM
@@ -836,10 +782,7 @@ def get_configured_PS(context):
 
     # Fail immediately if trying to set more than one default browser.
     if len(browsers) > 1:
-        raise Exception(
-            "\nOnly ONE default browser is allowed!\n"
-            "%s browsers were selected: %s" % (len(browsers), browsers)
-        )
+        raise Exception("\nOnly ONE default browser is allowed!\n" "%s browsers were selected: %s" % (len(browsers), browsers))
     # Recorder Mode can still optimize scripts in "-D headless2" mode.
     if ps.recorder_ext and ps.headless:
         ps.headless = False
@@ -851,28 +794,13 @@ def get_configured_PS(context):
         ps.headless2 = False  # Only for Chromium browsers
     # Recorder Mode only supports Chromium browsers.
     if ps.recorder_ext and (ps.browser not in ["chrome", "edge"]):
-        raise Exception(
-            "\n\n  Recorder Mode ONLY supports Chrome and Edge!"
-            '\n  (Your browser choice was: "%s")\n' % ps.browser
-        )
+        raise Exception("\n\n  Recorder Mode ONLY supports Chrome and Edge!" '\n  (Your browser choice was: "%s")\n' % ps.browser)
     # The Xvfb virtual display server is for Linux OS Only.
     if ps.xvfb and not is_linux:
         ps.xvfb = False
-    if (
-        is_linux
-        and not ps.headed
-        and not ps.headless
-        and not ps.headless2
-        and not ps.xvfb
-    ):
+    if is_linux and not ps.headed and not ps.headless and not ps.headless2 and not ps.xvfb:
         if not ps.undetectable:
-            print(
-                '(Linux uses "-D headless" by default. '
-                'To override, use "-D headed" / "-D gui". '
-                'For Xvfb mode instead, use "-D xvfb". '
-                "Or you can hide this info by using"
-                '"-D headless" / "-D headless2" / "-D uc".)'
-            )
+            print('(Linux uses "-D headless" by default. ' 'To override, use "-D headed" / "-D gui". ' 'For Xvfb mode instead, use "-D xvfb". ' "Or you can hide this info by using" '"-D headless" / "-D headless2" / "-D uc".)')
             ps.headless = True
         else:
             ps.xvfb = True
@@ -895,10 +823,7 @@ def get_configured_PS(context):
     if ps.window_size:
         window_size = ps.window_size
         if window_size.count(",") != 1:
-            message = (
-                '\n\n  window_size expects a "width,height" string!'
-                '\n  (Your input was: "%s")\n' % window_size
-            )
+            message = '\n\n  window_size expects a "width,height" string!' '\n  (Your input was: "%s")\n' % window_size
             raise Exception(message)
         window_size = window_size.replace(" ", "")
         width = None
@@ -907,10 +832,7 @@ def get_configured_PS(context):
             width = int(window_size.split(",")[0])
             height = int(window_size.split(",")[1])
         except Exception:
-            message = (
-                '\n\n  Expecting integer values for "width,height"!'
-                '\n  (window_size input was: "%s")\n' % window_size
-            )
+            message = '\n\n  Expecting integer values for "width,height"!' '\n  (window_size input was: "%s")\n' % window_size
             raise Exception(message)
         settings.CHROME_START_WIDTH = width
         settings.CHROME_START_HEIGHT = height
@@ -970,9 +892,7 @@ def get_configured_PS(context):
     if ps_config.dash_title:
         constants.Dashboard.TITLE = ps_config.dash_title.replace("_", " ")
 
-    log_helper.log_folder_setup(
-        constants.Logs.LATEST + "/", ps.archive_logs
-    )
+    log_helper.log_folder_setup(constants.Logs.LATEST + "/", ps.archive_logs)
     download_helper.reset_downloads_folder()
     proxy_helper.remove_proxy_zip_if_present()
     return ps
@@ -1075,10 +995,7 @@ def dashboard_pre_processing():
             filename_list.append(filename)
             feature_name = feature_name.strip()
             feature_list.append(feature_name)  # Maybe filename is good enough
-        elif (
-            row.startswith("  Scenario: ")
-            or row.startswith("  Scenario Outline: ")
-        ):
+        elif row.startswith("  Scenario: ") or row.startswith("  Scenario Outline: "):
             line_num = row.split(":")[-1]
             scenario_count += 1
             scenario_name = None
@@ -1096,9 +1013,7 @@ def dashboard_pre_processing():
             scenario_list.append(scenario_name)
             # Dashboard row preparation
             test_id = calculate_test_id(filename, scenario_name)
-            display_id = calculate_display_id(
-                filename, line_num, scenario_name
-            )
+            display_id = calculate_display_id(filename, line_num, scenario_name)
             ps_config._results[test_id] = "Untested"
             ps_config._duration[test_id] = "-"
             ps_config._display_id[test_id] = display_id
@@ -1177,11 +1092,7 @@ def _perform_behave_unconfigure_():
         # Close the shared browser session
         if ps_config.shared_driver:
             try:
-                if (
-                    not is_windows
-                    or ps_config.browser == "ie"
-                    or ps_config.shared_driver.service.process
-                ):
+                if not is_windows or ps_config.browser == "ie" or ps_config.shared_driver.service.process:
                     ps_config.shared_driver.quit()
             except AttributeError:
                 pass
@@ -1189,9 +1100,7 @@ def _perform_behave_unconfigure_():
                 pass
         ps_config.shared_driver = None
     if hasattr(ps_config, "archive_logs"):
-        log_helper.archive_logs_if_set(
-            constants.Logs.LATEST + "/", ps_config.archive_logs
-        )
+        log_helper.archive_logs_if_set(constants.Logs.LATEST + "/", ps_config.archive_logs)
     log_helper.clear_empty_logs()
     # Dashboard post-processing: Disable time-based refresh and stamp complete
     if not hasattr(ps_config, "dashboard") or not ps_config.dashboard:
@@ -1201,9 +1110,7 @@ def _perform_behave_unconfigure_():
     find_it = constants.Dashboard.META_REFRESH_HTML
     swap_with = ""  # Stop refreshing the page after the run is done
     find_it_2 = "Awaiting results... (Refresh the page for updates)"
-    swap_with_2 = (
-        "Test Run ENDED: Some results UNREPORTED due to skipped tearDown()"
-    )
+    swap_with_2 = "Test Run ENDED: Some results UNREPORTED due to skipped tearDown()"
     find_it_3 = '<td class="col-result">Untested</td>'
     swap_with_3 = '<td class="col-result">Unreported</td>'
     if sys.version_info[0] >= 3:
@@ -1254,20 +1161,14 @@ def _perform_behave_unconfigure_():
 def do_final_driver_cleanup_as_needed():
     try:
         if hasattr(ps_config, "last_driver") and ps_config.last_driver:
-            if (
-                not is_windows
-                or ps_config.browser == "ie"
-                or ps_config.last_driver.service.process
-            ):
+            if not is_windows or ps_config.browser == "ie" or ps_config.last_driver.service.process:
                 ps_config.last_driver.quit()
     except Exception:
         pass
 
 
 def _perform_behave_terminal_summary_():
-    latest_logs_dir = os.path.join(
-        os.getcwd(), constants.Logs.LATEST + os.sep
-    )
+    latest_logs_dir = os.path.join(os.getcwd(), constants.Logs.LATEST + os.sep)
     dash_path = os.path.join(os.getcwd(), "dashboard.html")
     equals_len = len("Dashboard: ") + len(dash_path)
     try:
@@ -1289,27 +1190,14 @@ def _perform_behave_terminal_summary_():
     if ps_config.dashboard:
         # Print link a second time because the first one may be off-screen
         print("%s- Dashboard:%s %s" % (c2, cr, dash_path))
-    if (
-        ps_config._has_exception
-        or ps_config.save_screenshot
-        or ps_config._has_logs
-    ):
+    if ps_config._has_exception or ps_config.save_screenshot or ps_config._has_logs:
         # Log files are generated during test failures and Screenshot Mode
         print("%s--- LogPath:%s %s" % (c2, cr, latest_logs_dir))
-    if (
-        ps_config.dashboard
-        and not (ps_config._has_exception or ps_config.save_screenshot)
-    ):
+    if ps_config.dashboard and not (ps_config._has_exception or ps_config.save_screenshot):
         print("%s" % equals)
-    elif (
-        not ps_config.dashboard
-        and (ps_config._has_exception or ps_config.save_screenshot)
-    ):
+    elif not ps_config.dashboard and (ps_config._has_exception or ps_config.save_screenshot):
         print("%s" % equals[2:])
-    elif (
-        ps_config.dashboard
-        and (ps_config._has_exception or ps_config.save_screenshot)
-    ):
+    elif ps_config.dashboard and (ps_config._has_exception or ps_config.save_screenshot):
         print("%s" % equals[2:])
 
 
@@ -1339,6 +1227,7 @@ def before_scenario(context, scenario):
 def before_step(context, step):
     ps_config.behave_step_count += 1
     ps_config.behave_step = step
+    context.behave_step = step
 
 
 def after_step(context, step):
