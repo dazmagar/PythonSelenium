@@ -1312,33 +1312,34 @@ def _set_chrome_options(
         chrome_options = undetected.ChromeOptions()
     elif browser_name == constants.Browser.EDGE:
         chrome_options = webdriver.edge.options.Options()
-    prefs = {}
-    prefs["download.default_directory"] = downloads_path
-    prefs["download.directory_upgrade"] = True
-    prefs["download.prompt_for_download"] = False
-    prefs["credentials_enable_service"] = False
-    prefs["local_discovery.notifications_enabled"] = False
-    prefs["safebrowsing.enabled"] = False  # Prevent PW "data breach" pop-ups
-    prefs["safebrowsing.disable_download_protection"] = True
-    prefs["omnibox-max-zero-suggest-matches"] = 0
-    prefs["omnibox-use-existing-autocomplete-client"] = 0
-    prefs["omnibox-trending-zero-prefix-suggestions-on-ntp"] = 0
-    prefs["omnibox-local-history-zero-suggest-beyond-ntp"] = 0
-    prefs["omnibox-on-focus-suggestions-contextual-web"] = 0
-    prefs["omnibox-on-focus-suggestions-srp"] = 0
-    prefs["omnibox-zero-suggest-prefetching"] = 0
-    prefs["omnibox-zero-suggest-prefetching-on-srp"] = 0
-    prefs["omnibox-zero-suggest-prefetching-on-web"] = 0
-    prefs["omnibox-zero-suggest-in-memory-caching"] = 0
-    prefs["content_settings.exceptions.automatic_downloads.*.setting"] = 1
-    prefs["default_content_setting_values.notifications"] = 0
-    prefs["default_content_settings.popups"] = 0
-    prefs["managed_default_content_settings.popups"] = 0
-    prefs["profile.password_manager_enabled"] = False
-    prefs["profile.default_content_setting_values.notifications"] = 2
-    prefs["profile.default_content_settings.popups"] = 0
-    prefs["profile.managed_default_content_settings.popups"] = 0
-    prefs["profile.default_content_setting_values.automatic_downloads"] = 1
+    prefs = {
+        "download.default_directory": downloads_path,
+        "download.directory_upgrade": True,
+        "download.prompt_for_download": False,
+        "credentials_enable_service": False,
+        "local_discovery.notifications_enabled": False,
+        "safebrowsing.enabled": False,  # Prevent PW "data breach" pop-ups
+        "safebrowsing.disable_download_protection": True,
+        "omnibox-max-zero-suggest-matches": 0,
+        "omnibox-use-existing-autocomplete-client": 0,
+        "omnibox-trending-zero-prefix-suggestions-on-ntp": 0,
+        "omnibox-local-history-zero-suggest-beyond-ntp": 0,
+        "omnibox-on-focus-suggestions-contextual-web": 0,
+        "omnibox-on-focus-suggestions-srp": 0,
+        "omnibox-zero-suggest-prefetching": 0,
+        "omnibox-zero-suggest-prefetching-on-srp": 0,
+        "omnibox-zero-suggest-prefetching-on-web": 0,
+        "omnibox-zero-suggest-in-memory-caching": 0,
+        "content_settings.exceptions.automatic_downloads.*.setting": 1,
+        "default_content_setting_values.notifications": 0,
+        "default_content_settings.popups": 0,
+        "managed_default_content_settings.popups": 0,
+        "profile.password_manager_enabled": False,
+        "profile.default_content_setting_values.notifications": 2,
+        "profile.default_content_settings.popups": 0,
+        "profile.managed_default_content_settings.popups": 0,
+        "profile.default_content_setting_values.automatic_downloads": 1,
+    }
     if locale_code:
         prefs["intl.accept_languages"] = locale_code
     if block_images:
@@ -3923,5 +3924,7 @@ def get_local_driver(
                 return extend_driver(driver)
             except Exception:
                 raise original_exception
+    elif browser_name == constants.Browser.NONE:
+        return None
     else:
         raise Exception("%s is not a valid browser option for this system!" % browser_name)

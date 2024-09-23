@@ -1,4 +1,5 @@
 """PythonSelenium constants"""
+
 from pythonselenium.core import encoded_images
 
 
@@ -150,9 +151,7 @@ class SideBySide:
 
     def get_favicon():
         if not hasattr(encoded_images, "SIDE_BY_SIDE_PNG"):
-            encoded_images.SIDE_BY_SIDE_PNG = (
-                encoded_images.get_side_by_side_png()
-            )
+            encoded_images.SIDE_BY_SIDE_PNG = encoded_images.get_side_by_side_png()
         return encoded_images.SIDE_BY_SIDE_PNG
 
 
@@ -218,9 +217,7 @@ class Messenger:
 
 class Underscore:
     VER = "1.13.6"
-    MIN_JS = (
-        "https://cdn.jsdelivr.net/npm/underscore@%s/underscore.min.js" % VER
-    )
+    MIN_JS = "https://cdn.jsdelivr.net/npm/underscore@%s/underscore.min.js" % VER
 
 
 class Backbone:
@@ -230,17 +227,11 @@ class Backbone:
 
 class HtmlInspector:
     VER = "0.8.2"
-    MIN_JS = (
-        "https://cdnjs.cloudflare.com/ajax/libs/"
-        "html-inspector/%s/html-inspector.min.js" % VER
-    )
+    MIN_JS = "https://cdnjs.cloudflare.com/ajax/libs/" "html-inspector/%s/html-inspector.min.js" % VER
 
 
 class PrettifyJS:
-    RUN_PRETTIFY_JS = (
-        "https://cdn.jsdelivr.net/gh/google/"
-        "code-prettify@master/loader/run_prettify.js"
-    )
+    RUN_PRETTIFY_JS = "https://cdn.jsdelivr.net/gh/google/" "code-prettify@master/loader/run_prettify.js"
 
 
 class Reveal:
@@ -266,12 +257,8 @@ class HighCharts:
     HC_CSS = "https://code.highcharts.com/%s/css/highcharts.css" % VER
     HC_JS = "https://code.highcharts.com/%s/highcharts.js" % VER
     EXPORTING_JS = "https://code.highcharts.com/%s/modules/exporting.js" % VER
-    EXPORT_DATA_JS = (
-        "https://code.highcharts.com/%s/modules/export-data.js" % VER
-    )
-    ACCESSIBILITY_JS = (
-        "https://code.highcharts.com/%s/modules/accessibility.js" % VER
-    )
+    EXPORT_DATA_JS = "https://code.highcharts.com/%s/modules/export-data.js" % VER
+    ACCESSIBILITY_JS = "https://code.highcharts.com/%s/modules/accessibility.js" % VER
 
 
 class BootstrapTour:
@@ -297,10 +284,7 @@ class Hopscotch:
 
 class IntroJS:
     VER = "5.1.0"
-    MIN_CSS = (
-        "https://cdn.jsdelivr.net/npm/"
-        "intro.js@%s/minified/introjs.min.css" % VER
-    )
+    MIN_CSS = "https://cdn.jsdelivr.net/npm/" "intro.js@%s/minified/introjs.min.css" % VER
     MIN_JS = "https://cdn.jsdelivr.net/npm/intro.js@%s/intro.min.js" % VER
 
 
@@ -336,9 +320,7 @@ class Shepherd:
 
 class Tether:
     VER = "1.4.7"
-    MIN_JS = (
-        "https://cdn.jsdelivr.net/npm/tether@%s/dist/js/tether.min.js" % VER
-    )
+    MIN_JS = "https://cdn.jsdelivr.net/npm/tether@%s/dist/js/tether.min.js" % VER
 
 
 class ProxyPy:
@@ -362,12 +344,7 @@ class Mobile:
     WIDTH = 390
     HEIGHT = 715
     RATIO = 3
-    AGENT = (
-        "Mozilla/5.0 (Linux; Android 13; Pixel 7 XL "
-        "Build/SP2A.220505.006.A1; wv) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
-        "Chrome/110.0.5028.105 Mobile Safari/537.36"
-    )
+    AGENT = "Mozilla/5.0 (Linux; Android 13; Pixel 7 XL " "Build/SP2A.220505.006.A1; wv) " "AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 " "Chrome/110.0.5028.105 Mobile Safari/537.36"
 
 
 class UC:
@@ -382,6 +359,7 @@ class ValidBrowsers:
         "ie",
         "safari",
         "remote",
+        "none",
     ]
 
 
@@ -439,6 +417,7 @@ class Browser:
     INTERNET_EXPLORER = "ie"
     SAFARI = "safari"
     REMOTE = "remote"
+    NONE = "none"
 
     VERSION = {
         "chrome": None,

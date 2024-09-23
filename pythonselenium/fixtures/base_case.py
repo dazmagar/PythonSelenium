@@ -670,10 +670,8 @@ class BaseCase(unittest.TestCase):
             original_selector=original_selector,
         )
         pre_action_url = None
-        try:
+        with suppress(Exception):
             pre_action_url = self.driver.current_url
-        except Exception:
-            pass
         try:
             if self.browser == "safari":
                 # Jump to the "except" block where the other script should work
@@ -718,14 +716,13 @@ class BaseCase(unittest.TestCase):
             self.__slow_mode_pause_if_active()
         elif self.__needs_minimum_wait():
             time.sleep(0.02)
-        if self.recorder_mode and self.__current_url_is_recordable():
-            if self.get_session_storage_item("pause_recorder") == "no":
-                if by == By.XPATH:
-                    selector = original_selector
-                time_stamp = self.execute_script("return Date.now();")
-                origin = self.get_origin()
-                action = ["r_clk", selector, origin, time_stamp]
-                self.__extra_actions.append(action)
+        if self.recorder_mode and self.__current_url_is_recordable() and self.get_session_storage_item("pause_recorder") == "no":
+            if by == By.XPATH:
+                selector = original_selector
+            time_stamp = self.execute_script("return Date.now();")
+            origin = self.get_origin()
+            action = ["r_clk", selector, origin, time_stamp]
+            self.__extra_actions.append(action)
 
     def click_chain(self, selectors_list, by="css selector", timeout=None, spacing=0):
         """This method clicks on a list of elements in succession.
@@ -781,19 +778,16 @@ class BaseCase(unittest.TestCase):
             self.wait_for_ready_state_complete()
             time.sleep(0.16)
             element = self.wait_for_element_clickable(selector, by=by, timeout=timeout)
-            try:
+            with suppress(Exception):
+                # Clearing the text field first might not be necessary
                 element.clear()
-            except Exception:
-                pass  # Clearing the text field first might not be necessary
         except Exception:
             pass  # Clearing the text field first might not be necessary
         self.__demo_mode_pause_if_active(tiny=True)
         pre_action_url = None
         if self.demo_mode:
-            try:
+            with suppress(Exception):
                 pre_action_url = self.driver.current_url
-            except Exception:
-                pass
         text = self.__get_type_checked_text(text)
         try:
             if not text.endswith("\n"):
@@ -885,10 +879,8 @@ class BaseCase(unittest.TestCase):
             self.__scroll_to_element(element, selector, by)
         pre_action_url = None
         if self.demo_mode:
-            try:
+            with suppress(Exception):
                 pre_action_url = self.driver.current_url
-            except Exception:
-                pass
         text = self.__get_type_checked_text(text)
         try:
             if not text.endswith("\n"):
@@ -1083,11 +1075,9 @@ class BaseCase(unittest.TestCase):
             self.wait_for_ready_state_complete()
             time.sleep(0.12)
             element = self.wait_for_element_visible(selector, by=by, timeout=timeout)
-            try:
-                element.send_keys(Keys.NULL)
-            except ENI_Exception:
+            with suppress(ENI_Exception):
                 # Non-interactable element. Skip focus and continue.
-                pass
+                element.send_keys(Keys.NULL)
         self.__demo_mode_pause_if_active()
 
     def refresh_page(self):
@@ -1144,17 +1134,13 @@ class BaseCase(unittest.TestCase):
         if hasattr(self, "recorder_mode") and self.recorder_mode:
             self.save_recorded_actions()
         pre_action_url = None
-        try:
+        with suppress(Exception):
             pre_action_url = self.driver.current_url
-        except Exception:
-            pass
         self.__last_page_load_url = None
         self.driver.back()
-        try:
+        with suppress(Exception):
             if pre_action_url == self.driver.current_url:
                 self.driver.back()  # Again because the page was redirected
-        except Exception:
-            pass
         if self.recorder_mode:
             time_stamp = self.execute_script("return Date.now();")
             origin = self.get_origin()
@@ -1412,10 +1398,8 @@ class BaseCase(unittest.TestCase):
             if self.__needs_minimum_wait():
                 time.sleep(0.04)
         pre_action_url = None
-        try:
+        with suppress(Exception):
             pre_action_url = self.driver.current_url
-        except Exception:
-            pass
         pre_window_count = len(self.driver.window_handles)
         try:
             element = self.wait_for_link_text_visible(link_text, timeout=0.2)
@@ -1468,10 +1452,8 @@ class BaseCase(unittest.TestCase):
             # switch to the last one if it exists.
             self.switch_to_window(-1)
         if settings.WAIT_FOR_RSC_ON_PAGE_LOADS:
-            try:
+            with suppress(Exception):
                 self.wait_for_ready_state_complete()
-            except Exception:
-                pass
         if self.demo_mode:
             if self.driver.current_url != pre_action_url:
                 if not js_utils.is_jquery_activated(self.driver):
@@ -3553,6 +3535,8 @@ class BaseCase(unittest.TestCase):
             device_pixel_ratio=d_p_r,
             browser=browser_name,
         )
+        if new_driver is None:
+            return
         self._drivers_list.append(new_driver)
         self._drivers_browser_map[new_driver] = browser_name
         if switch_to:
@@ -3575,36 +3559,27 @@ class BaseCase(unittest.TestCase):
                 width = settings.CHROME_START_WIDTH
                 height = settings.CHROME_START_HEIGHT
                 if self.is_chromium():
-                    try:
+                    with suppress(Exception):
                         if self.maximize_option:
                             self.driver.maximize_window()
                             self.wait_for_ready_state_complete()
                         else:
                             pass  # Now handled in browser_launcher.py
-                            # self.driver.set_window_size(width, height)
-                    except Exception:
-                        pass  # Keep existing browser resolution
                 elif self.browser == "firefox":
-                    try:
+                    with suppress(Exception):
                         if self.maximize_option:
                             self.driver.maximize_window()
                             self.wait_for_ready_state_complete()
                         else:
                             self.driver.set_window_size(width, height)
-                    except Exception:
-                        pass  # Keep existing browser resolution
                 elif self.browser == "safari":
                     if self.maximize_option:
-                        try:
+                        with suppress(Exception):
                             self.driver.maximize_window()
                             self.wait_for_ready_state_complete()
-                        except Exception:
-                            pass  # Keep existing browser resolution
                     else:
-                        try:
+                        with suppress(Exception):
                             self.driver.set_window_rect(10, 20, width, height)
-                        except Exception:
-                            pass
             if self.start_page and len(self.start_page) >= 4:
                 if page_utils.is_valid_url(self.start_page):
                     self.open(self.start_page)
@@ -7659,10 +7634,8 @@ class BaseCase(unittest.TestCase):
         """This method raises an exception if the active window is closed.
         (This provides a much cleaner exception message in this situation.)"""
         active_window = None
-        try:
+        with suppress(Exception):
             active_window = self.driver.current_window_handle  # Fails if None
-        except Exception:
-            pass
         if not active_window:
             raise NoSuchWindowException("Active window was already closed!")
 
@@ -12524,13 +12497,7 @@ class BaseCase(unittest.TestCase):
             self.rec_print = ps_config.rec_print
             self.rec_behave = ps_config.rec_behave
             self.record_sleep = ps_config.record_sleep
-            if self.rec_print and not self.recorder_mode:
-                self.recorder_mode = True
-                self.recorder_ext = True
-            elif self.rec_behave and not self.recorder_mode:
-                self.recorder_mode = True
-                self.recorder_ext = True
-            elif self.record_sleep and not self.recorder_mode:
+            if (self.rec_print and not self.recorder_mode) or (self.rec_behave and not self.recorder_mode) or (self.record_sleep and not self.recorder_mode):
                 self.recorder_mode = True
                 self.recorder_ext = True
             self.disable_js = ps_config.disable_js
@@ -12646,15 +12613,24 @@ class BaseCase(unittest.TestCase):
                 self.__skip_reason = None
                 self.testcase_manager.insert_testcase_data(data_payload)
                 self.case_start_time = int(time.time() * 1000.0)
-            self.__activate_virtual_display_as_needed()
+            if self.browser == "none":
+                self.driver = None
+            else:
+                self.__activate_virtual_display_as_needed()
         elif hasattr(self, "is_behave") and self.is_behave:
             self.__initialize_variables()
-            self.__activate_virtual_display_as_needed()
+            if self.browser == "none":
+                self.driver = None
+            else:
+                self.__activate_virtual_display_as_needed()
         elif hasattr(self, "is_nosetest") and self.is_nosetest:
             pass  # Setup performed in plugins for pynose
         else:
             # Pure Python run. Eg. PS() Manager
-            self.__activate_virtual_display_as_needed()
+            if self.browser == "none":
+                self.driver = None
+            else:
+                self.__activate_virtual_display_as_needed()
 
         # Verify pythonselenium is installed successfully, and used correctly
         if not hasattr(self, "browser"):
@@ -12675,10 +12651,9 @@ class BaseCase(unittest.TestCase):
             ps_config._SMALL_TIMEOUT = settings.SMALL_TIMEOUT
             ps_config._LARGE_TIMEOUT = settings.LARGE_TIMEOUT
 
-        if ps_config._is_timeout_changed:
-            if ps_config._SMALL_TIMEOUT and ps_config._LARGE_TIMEOUT:
-                settings.SMALL_TIMEOUT = ps_config._SMALL_TIMEOUT
-                settings.LARGE_TIMEOUT = ps_config._LARGE_TIMEOUT
+        if ps_config._is_timeout_changed and ps_config._SMALL_TIMEOUT and ps_config._LARGE_TIMEOUT:
+            settings.SMALL_TIMEOUT = ps_config._SMALL_TIMEOUT
+            settings.LARGE_TIMEOUT = ps_config._LARGE_TIMEOUT
 
         if not hasattr(self, "_swiftshader"):
             # Not swiftshader: options.add_argument("--disable-gpu")
@@ -12747,11 +12722,10 @@ class BaseCase(unittest.TestCase):
         if self.mobile_emulator and not self.user_agent:
             # Use a Pixel user agent by default if not specified
             self.user_agent = constants.Mobile.AGENT
-        if self.browser in ["firefox", "ie", "safari"]:
+        if self.browser in ["firefox", "ie", "safari"] and self.recorder_mode:
             # The Recorder Mode browser extension is only for Chrome/Edge.
-            if self.recorder_mode:
-                message = "Recorder Mode ONLY supports Chrome and Edge!\n" '(Your browser choice was: "%s")' % self.browser
-                raise Exception(message)
+            message = "Recorder Mode ONLY supports Chrome and Edge!\n" '(Your browser choice was: "%s")' % self.browser
+            raise Exception(message)
 
         # Dashboard pre-processing:
         if self.dashboard:
@@ -12791,10 +12765,8 @@ class BaseCase(unittest.TestCase):
                         self.switch_to_window(0)
                     if self._crumbs:
                         self.wait_for_ready_state_complete()
-                        try:
+                        with suppress(Exception):
                             self.driver.delete_all_cookies()
-                        except Exception:
-                            pass
                 except Exception:
                     pass
         if self._reuse_session and ps_config.shared_driver and has_url:
@@ -12814,13 +12786,12 @@ class BaseCase(unittest.TestCase):
                         self.__dont_record_open = True
                         self.open(new_start_page)
                         self.__dont_record_open = False
-            if self.recorder_ext or (self._crumbs and not good_start_page):
-                if self.get_current_url() != "about:blank":
-                    self.__new_window_on_rec_open = False
-                    self.open("about:blank")
-                    self.__new_window_on_rec_open = True
-                    if self.recorder_ext:
-                        self.__js_start_time = int(time.time() * 1000.0)
+            if (self.recorder_ext or (self._crumbs and not good_start_page)) and self.get_current_url() != "about:blank":
+                self.__new_window_on_rec_open = False
+                self.open("about:blank")
+                self.__new_window_on_rec_open = True
+                if self.recorder_ext:
+                    self.__js_start_time = int(time.time() * 1000.0)
         else:
             # Launch WebDriver for both pytest and pynose
             self.driver = self.get_new_driver(
@@ -12879,14 +12850,14 @@ class BaseCase(unittest.TestCase):
                 d_height=self.__device_height,
                 d_p_r=self.__device_pixel_ratio,
             )
+            if self.driver is None:
+                return
             try:
                 if self.driver.timeouts.implicit_wait > 0:
                     self.driver.implicitly_wait(0)
             except Exception:
-                try:
+                with suppress(Exception):
                     self.driver.implicitly_wait(0)
-                except Exception:
-                    pass
             self._default_driver = self.driver
             if self._reuse_session:
                 ps_config.shared_driver = self.driver
