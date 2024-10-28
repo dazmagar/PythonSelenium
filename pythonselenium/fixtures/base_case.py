@@ -7565,6 +7565,36 @@ class BaseCase(unittest.TestCase):
             original_selector=original_selector,
         )
 
+    def check_element_present(self, selector, by="css selector", timeout=None):
+        """Check that the specified element is present in the HTML of a page.
+        Returns True if the element is present, False otherwise."""
+        self.__check_scope()
+        self.__skip_if_esc()
+        if not timeout:
+            timeout = settings.LARGE_TIMEOUT
+        if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
+            timeout = self.__get_new_timeout(timeout)
+        selector, by = self.__recalculate_selector(selector, by)
+        if self.__is_shadow_selector(selector):
+            raise Exception("check_element_present does not support shadow root elements")
+        return page_actions.check_element_present(self.driver, selector, by, timeout=timeout)
+
+    def check_element_visible(self, selector, by="css selector", timeout=None):
+        """
+        Check if the specified element is visible on the page.
+        Returns True if the element is visible, otherwise returns False.
+        """
+        self.__check_scope()
+        self.__skip_if_esc()
+        if not timeout:
+            timeout = settings.LARGE_TIMEOUT
+        if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
+            timeout = self.__get_new_timeout(timeout)
+        selector, by = self.__recalculate_selector(selector, by)
+        if self.__is_shadow_selector(selector):
+            raise Exception("check_element_visible does not support shadow root elements")
+        return page_actions.check_element_visible(self.driver, selector, by, timeout=timeout)
+
     def assert_link(self, link_text, timeout=None):
         """Same as self.assert_link_text()"""
         self.__check_scope()

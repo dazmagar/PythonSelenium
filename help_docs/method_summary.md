@@ -882,6 +882,12 @@ self.assert_attribute_not_present(
 
 ############
 
+self.check_element_present(self, selector, by="css selector", timeout=None)
+
+self.check_element_visible(self, selector, by="css selector", timeout=None)
+
+############
+
 self.accept_alert(timeout=None)
 # Duplicates:
 # self.wait_for_and_accept_alert(timeout=None)

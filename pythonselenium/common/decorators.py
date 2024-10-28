@@ -4,6 +4,7 @@ import time
 import warnings
 from contextlib import contextmanager
 from functools import wraps
+
 from pythonselenium.common.exceptions import TimeoutException
 
 
@@ -25,7 +26,7 @@ def print_runtime(description=None, limit=None):
 
         with decorators.print_runtime("My Code Block"):
             # code ...
-            # code ... """
+            # code ..."""
     if not description:
         description = "Code Block"
     description = str(description)
@@ -57,10 +58,7 @@ def print_runtime(description=None, limit=None):
         else:
             print("  {%s} ran for %.2f seconds." % (description, run_time))
         if limit and limit > 0 and run_time > limit:
-            message = (
-                "\n {%s} duration of %.2fs exceeded the time limit of %.2fs!"
-                % (description, run_time, limit)
-            )
+            message = "\n {%s} duration of %.2fs exceeded the time limit of %.2fs!" % (description, run_time, limit)
             if exception:
                 message = exception.msg + "\nAND " + message
             raise TimeoutException(message)
@@ -84,7 +82,7 @@ def runtime_limit(limit, description=None):
 
         with decorators.runtime_limit(32):
             # code ...
-            # code ... """
+            # code ..."""
     limit = float("%.2f" % limit)
     if limit < 0.01:
         limit = 0.01  # Minimum runtime limit
@@ -103,10 +101,7 @@ def runtime_limit(limit, description=None):
         run_time = end_time - start_time
         # Fail if the runtime of the code block exceeds the limit
         if limit and limit > 0 and run_time > limit:
-            message = (
-                "\n {%s} duration of %.2fs exceeded the time limit of %.2fs!"
-                % (description, run_time, limit)
-            )
+            message = "\n {%s} duration of %.2fs exceeded the time limit of %.2fs!" % (description, run_time, limit)
             if exception:
                 message = exception.msg + "\nAND " + message
             raise TimeoutException(message)
@@ -139,9 +134,7 @@ def retry_on_exception(tries=6, delay=1, backoff=2, max_delay=32):
                 except Exception as e:
                     if local_delay > max_delay:
                         local_delay = max_delay
-                    logging.exception(
-                        "%s: Retrying in %d seconds..." % (str(e), local_delay)
-                    )
+                    logging.exception("%s: Retrying in %d seconds..." % (str(e), local_delay))
                     time.sleep(local_delay)
                     local_tries -= 1
                     local_delay *= backoff
@@ -212,3 +205,28 @@ def deprecated(message=None):
         return new_func
 
     return decorated_method_to_deprecate
+
+
+@contextmanager
+def timeout(limit):
+    """Context manager for limiting execution time of a code block.
+
+    Usage example:
+        with timeout(600) as t:
+            while True:
+                # code ...
+                if t.expired:
+                    raise AssertionError(f"Timeout: 600s")
+    """
+    if limit <= 0:
+        raise ValueError("Limit must be a positive number.")
+
+    start_time = time.time()
+    end_time = start_time + limit
+
+    class Timer:
+        @property
+        def expired(self):
+            return time.time() > end_time
+
+    yield Timer()

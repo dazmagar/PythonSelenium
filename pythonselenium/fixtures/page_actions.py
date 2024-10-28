@@ -1064,6 +1064,64 @@ def wait_for_attribute_not_present(driver, selector, attribute, value=None, by="
     timeout_exception(Exception, message)
 
 
+def check_element_present(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT, ignore_test_time_limit=False):
+    """
+    Checks if the specified element is present in the HTML.
+    Returns True if the element is found, otherwise returns False.
+    @Params
+    driver - the webdriver object
+    selector - the locator for identifying the page element (required)
+    by - the type of selector being used (Default: "css selector")
+    timeout - the time to wait for elements in seconds
+    ignore_test_time_limit - ignore test time limit (NOT related to timeout)
+    @Returns
+    True if the element is present, False if it is not
+    """
+    start_ms = time.time() * 1000.0
+    stop_ms = start_ms + (timeout * 1000.0)
+    for x in range(int(timeout * 10)):
+        if not ignore_test_time_limit:
+            shared_utils.check_if_time_limit_exceeded()
+        try:
+            driver.find_element(by=by, value=selector)
+            return True
+        except Exception:
+            now_ms = time.time() * 1000.0
+            if now_ms >= stop_ms:
+                break
+            time.sleep(0.1)
+    return False
+
+
+def check_element_visible(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT, ignore_test_time_limit=False):
+    """
+    Searches for the specified element by the given selector and checks if it is visible.
+    Returns True if the element is present and visible, otherwise returns False.
+    """
+    element = None
+    is_present = False
+    start_ms = time.time() * 1000.0
+    stop_ms = start_ms + (timeout * 1000.0)
+
+    for x in range(int(timeout * 10)):
+        if not ignore_test_time_limit:
+            shared_utils.check_if_time_limit_exceeded()
+        try:
+            element = driver.find_element(by=by, value=selector)
+            is_present = True
+            if element.is_displayed():
+                return True
+        except Exception:
+            now_ms = time.time() * 1000.0
+            if now_ms >= stop_ms:
+                break
+            time.sleep(0.1)
+
+    if not is_present:
+        return False
+    return bool(element and element.is_displayed())
+
+
 def find_visible_elements(driver, selector, by="css selector", limit=0):
     """
     Finds all WebElements that match a selector and are visible.
