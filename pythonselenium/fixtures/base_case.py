@@ -3215,6 +3215,14 @@ class BaseCase(unittest.TestCase):
     def switch_to_newest_window(self):
         self.switch_to_window(-1)
 
+    def close_windows(self, close_indices, fallback_index=-1, timeout=None):
+        self.__check_scope()
+        if not timeout:
+            timeout = settings.SMALL_TIMEOUT
+        if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
+            timeout = self.__get_new_timeout(timeout)
+        page_actions.close_windows(self.driver, close_indices, fallback_index, timeout)
+
     def get_new_driver(
         self,
         browser=None,
@@ -7594,6 +7602,22 @@ class BaseCase(unittest.TestCase):
         if self.__is_shadow_selector(selector):
             raise Exception("check_element_visible does not support shadow root elements")
         return page_actions.check_element_visible(self.driver, selector, by, timeout=timeout)
+
+    def check_element_clickable(self, selector, by="css selector", timeout=None):
+        """
+        Check if the specified element is clickable on the page.
+        Returns True if the element is clickable, otherwise returns False.
+        """
+        self.__check_scope()
+        self.__skip_if_esc()
+        if not timeout:
+            timeout = settings.LARGE_TIMEOUT
+        if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
+            timeout = self.__get_new_timeout(timeout)
+        selector, by = self.__recalculate_selector(selector, by)
+        if self.__is_shadow_selector(selector):
+            raise Exception("check_element_clickable does not support shadow root elements")
+        return page_actions.check_element_clickable(self.driver, selector, by, timeout=timeout)
 
     def assert_link(self, link_text, timeout=None):
         """Same as self.assert_link_text()"""

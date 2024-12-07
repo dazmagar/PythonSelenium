@@ -267,6 +267,8 @@ self.switch_to_default_window()
 self.switch_to_newest_window()
 # Duplicates: self.switch_to_newest_tab()
 
+self.close_windows(close_indices, fallback_index=-1, timeout=None)
+
 self.get_new_driver(
     browser=None,
     headless=None,
@@ -885,6 +887,8 @@ self.assert_attribute_not_present(
 self.check_element_present(self, selector, by="css selector", timeout=None)
 
 self.check_element_visible(self, selector, by="css selector", timeout=None)
+
+self.check_element_clickable(self, selector, by="css selector", timeout=None)
 
 ############
 

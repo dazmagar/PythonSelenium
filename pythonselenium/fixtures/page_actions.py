@@ -1122,6 +1122,35 @@ def check_element_visible(driver, selector, by="css selector", timeout=settings.
     return bool(element and element.is_displayed())
 
 
+def check_element_clickable(driver, selector, by="css selector", timeout=settings.LARGE_TIMEOUT, ignore_test_time_limit=False):
+    """
+    Searches for the specified element by the given selector and checks if it is clickable.
+    Returns True if the element is present and clickable, otherwise returns False.
+    """
+    element = None
+    is_present = False
+    start_ms = time.time() * 1000.0
+    stop_ms = start_ms + (timeout * 1000.0)
+
+    for x in range(int(timeout * 10)):
+        if not ignore_test_time_limit:
+            shared_utils.check_if_time_limit_exceeded()
+        try:
+            element = driver.find_element(by=by, value=selector)
+            is_present = True
+            if element.is_enabled():
+                return True
+        except Exception:
+            now_ms = time.time() * 1000.0
+            if now_ms >= stop_ms:
+                break
+            time.sleep(0.1)
+
+    if not is_present:
+        return False
+    return bool(element and element.is_enabled())
+
+
 def find_visible_elements(driver, selector, by="css selector", limit=0):
     """
     Finds all WebElements that match a selector and are visible.
@@ -1392,6 +1421,67 @@ def switch_to_window(driver, window, timeout=settings.SMALL_TIMEOUT, uc_lock=Tru
             plural,
         )
         timeout_exception(Exception, message)
+
+
+def close_windows(
+    driver,
+    close_indices,
+    fallback_index=-1,
+    timeout=settings.SMALL_TIMEOUT,
+):
+    """
+    Close specified windows by their indices and switch to a remaining window.
+    @Params:
+    driver - the webdriver object (required)
+    close_indices - list of indices of the windows to close
+    fallback_index - index of the window to switch to before closing other windows;
+                     if -1, automatically switches to the last remaining window
+    timeout - the time to wait for the operation in seconds
+    @Returns:
+    True if the operation was successful; raises an exception otherwise
+    """
+    start_ms = time.time() * 1000.0
+    stop_ms = start_ms + (timeout * 1000.0)
+    window_handles = driver.window_handles
+    num_windows = len(window_handles)
+    close_indices = sorted(set(close_indices))
+    if any(i >= num_windows or i < 0 for i in close_indices):
+        raise ValueError(f"Invalid indices in close_indices: {close_indices}")
+
+    if fallback_index < -1 or fallback_index >= num_windows:
+        raise ValueError(f"Invalid fallback_index: {fallback_index}. Available indices: {list(range(num_windows))}")
+
+    if fallback_index in close_indices:
+        raise ValueError(f"fallback_index {fallback_index} cannot be in close_indices: {close_indices}")
+
+    close_handles = [window_handles[i] for i in close_indices]
+    fallback_handle = window_handles[-1] if fallback_index == -1 else window_handles[fallback_index]
+
+    for _ in range(int(timeout * 10)):
+        shared_utils.check_if_time_limit_exceeded()
+        now_ms = time.time() * 1000.0
+
+        driver.switch_to.window(fallback_handle)
+
+        remaining_handles = driver.window_handles
+        if fallback_handle in remaining_handles:
+            for handle in close_handles:
+                if handle in remaining_handles:
+                    driver.switch_to.window(handle)
+                    driver.close()
+
+            remaining_handles = driver.window_handles
+            if fallback_handle in remaining_handles:
+                driver.switch_to.window(fallback_handle)
+                return True
+
+        if now_ms >= stop_ms:
+            break
+        time.sleep(0.1)
+
+    plural = "s" if timeout != 1 else ""
+    message = "Failed to switch to the window  {%s} within %s second%s or close windows!" % (fallback_index, timeout, plural)
+    timeout_exception(Exception, message)
 
 
 ############
