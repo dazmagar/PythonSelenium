@@ -10,7 +10,6 @@ Feature: PythonSelenium scenarios for the Swag Labs App
     When Logout from Swag Labs
     Then Verify on Login page
 
-  @debug
   Scenario: User can order a backpack from the store
     When Login to Swag Labs with standard_user
     Then Verify that the current user is logged in

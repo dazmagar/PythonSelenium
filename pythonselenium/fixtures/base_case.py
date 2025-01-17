@@ -48,6 +48,7 @@ from contextlib import contextmanager, suppress
 
 import fasteners
 import urllib3
+from behave.model import Status
 from selenium.common.exceptions import ElementClickInterceptedException as ECI_Exception
 from selenium.common.exceptions import ElementNotInteractableException as ENI_Exception
 from selenium.common.exceptions import (
@@ -341,7 +342,7 @@ class BaseCase(unittest.TestCase):
             return self.get_element(url)  # url is treated like a selector
         self.open(url)
 
-    def click(self, selector: str, by: str = "css selector", timeout: t.Optional[t.Union[int, float]] = None, delay: t.Union[int, float] = 0, scroll: bool = True) -> None:
+    def click(self, selector: str, by: str = "css selector", timeout: t.Optional[t.Union[int, float]] = None, delay: t.Union[int, float] = 0, scroll: bool = True, msg=None) -> None:
         self.__check_scope()
         self.__skip_if_esc()
         if not timeout:
@@ -366,7 +367,7 @@ class BaseCase(unittest.TestCase):
             return
         if self.__needs_minimum_wait() or self.browser == "safari":
             time.sleep(0.05)
-        element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout=timeout, original_selector=original_selector)
+        element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout=timeout, original_selector=original_selector, msg=msg)
         self.__demo_mode_highlight_if_active(original_selector, original_by)
         if scroll and not self.demo_mode and not self.slow_mode:
             self.__scroll_to_element(element, selector, by)
@@ -404,7 +405,7 @@ class BaseCase(unittest.TestCase):
         except Stale_Exception:
             self.wait_for_ready_state_complete()
             time.sleep(0.16)
-            element = page_actions.wait_for_element_clickable(self.driver, selector, by, timeout=timeout, original_selector=original_selector)
+            element = page_actions.wait_for_element_clickable(self.driver, selector, by, timeout=timeout, original_selector=original_selector, msg=msg)
             with suppress(Exception):
                 self.__scroll_to_element(element, selector, by)
             if self.browser == "safari" and by == By.LINK_TEXT:
@@ -425,12 +426,12 @@ class BaseCase(unittest.TestCase):
                     return
             self.wait_for_ready_state_complete()
             time.sleep(0.1)
-            element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout=timeout, original_selector=original_selector)
+            element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout=timeout, original_selector=original_selector, msg=msg)
             if not page_actions.is_element_clickable(self.driver, selector, by):
                 with suppress(Exception):
-                    self.wait_for_element_clickable(selector, by, timeout=1.8)
+                    self.wait_for_element_clickable(selector, by, timeout=1.8, msg=msg)
                 # Find out which element would get the click instead
-                element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout=timeout, original_selector=original_selector)
+                element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout=timeout, original_selector=original_selector, msg=msg)
             href, new_tab, onclick = None, False, None
             with suppress(Exception):
                 if element.tag_name.lower() == "a":
@@ -462,7 +463,7 @@ class BaseCase(unittest.TestCase):
                     self.__element_click(element)
                 except Exception:
                     self.wait_for_ready_state_complete()
-                    element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout=timeout, original_selector=original_selector)
+                    element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout=timeout, original_selector=original_selector, msg=msg)
                     self.__element_click(element)
         except MoveTargetOutOfBoundsException:
             self.wait_for_ready_state_complete()
@@ -473,7 +474,7 @@ class BaseCase(unittest.TestCase):
                     self.__jquery_click(selector, by=by)
                 except Exception:
                     # One more attempt to click on the element
-                    element = page_actions.wait_for_element_clickable(self.driver, selector, by, timeout=timeout, original_selector=original_selector)
+                    element = page_actions.wait_for_element_clickable(self.driver, selector, by, timeout=timeout, original_selector=original_selector, msg=msg)
                     self.__element_click(element)
         except WebDriverException as e:
             if "cannot determine loading status" in e.msg or "unexpected command response" in e.msg:
@@ -487,7 +488,7 @@ class BaseCase(unittest.TestCase):
                         self.__jquery_click(selector, by=by)
                     except Exception:
                         # One more attempt to click on the element
-                        element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout=timeout, original_selector=original_selector)
+                        element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout=timeout, original_selector=original_selector, msg=msg)
                         self.__element_click(element)
         latest_window_count = len(self.driver.window_handles)
         if latest_window_count > pre_window_count and (self.recorder_mode or (settings.SWITCH_TO_NEW_TABS_ON_CLICK and self.driver.current_url == pre_action_url)):
@@ -1125,6 +1126,10 @@ class BaseCase(unittest.TestCase):
 
     def get_user_agent(self):
         return self.execute_script("return navigator.userAgent;")
+    
+    def get_parent(self, selector):
+        script = """document.querySelector('%s').parentNode;""" % selector
+        return self.execute_script(script)
 
     def get_locale_code(self):
         return self.execute_script("return navigator.language || navigator.languages[0];")
@@ -1547,7 +1552,7 @@ class BaseCase(unittest.TestCase):
         elif self.slow_mode:
             self.__slow_mode_pause_if_active()
 
-    def get_text(self, selector="html", by="css selector", timeout=None):
+    def get_text(self, selector="html", by="css selector", timeout=None, msg=None):
         self.__check_scope()
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
@@ -1558,7 +1563,7 @@ class BaseCase(unittest.TestCase):
             return self.__get_shadow_text(selector, timeout)
         self.wait_for_ready_state_complete()
         time.sleep(0.01)
-        element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout)
+        element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout, msg)
         try:
             element_text = element.text
             if self.browser == "safari":
@@ -1571,7 +1576,7 @@ class BaseCase(unittest.TestCase):
         except (Stale_Exception, ENI_Exception, TimeoutException):
             self.wait_for_ready_state_complete()
             time.sleep(0.14)
-            element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout)
+            element = page_actions.wait_for_element_visible(self.driver, selector, by, timeout, msg)
             element_text = element.text
             if self.browser == "safari":
                 if element.tag_name.lower() in ["input", "textarea"]:
@@ -6403,7 +6408,7 @@ class BaseCase(unittest.TestCase):
                 raise Exception("Expected Exception!")"""
         return self.assertRaises(*args, **kwargs)
 
-    def wait_for_attribute(self, selector, attribute, value=None, by="css selector", timeout=None):
+    def wait_for_attribute(self, selector, attribute, value=None, by="css selector", timeout=None, msg=None):
         """Raises an exception if the element attribute/value is not found.
         If the value is not specified, the attribute only needs to exist.
         Returns the element that contains the attribute if successful.
@@ -6415,7 +6420,7 @@ class BaseCase(unittest.TestCase):
             timeout = self.__get_new_timeout(timeout)
         selector, by = self.__recalculate_selector(selector, by)
         if self.__is_shadow_selector(selector):
-            return self.__wait_for_shadow_attribute_present(selector, attribute, value=value, timeout=timeout)
+            return self.__wait_for_shadow_attribute_present(selector, attribute, value=value, timeout=timeout, msg=msg)
         return page_actions.wait_for_attribute(
             self.driver,
             selector,
@@ -6423,9 +6428,10 @@ class BaseCase(unittest.TestCase):
             value=value,
             by=by,
             timeout=timeout,
+            msg=msg,
         )
 
-    def assert_attribute(self, selector, attribute, value=None, by="css selector", timeout=None):
+    def assert_attribute(self, selector, attribute, value=None, by="css selector", timeout=None, msg=None):
         """Raises an exception if the element attribute/value is not found.
         If the value is not specified, the attribute only needs to exist.
         Returns True if successful. Default timeout = SMALL_TIMEOUT."""
@@ -6435,7 +6441,7 @@ class BaseCase(unittest.TestCase):
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
         selector, by = self.__recalculate_selector(selector, by)
-        self.wait_for_attribute(selector, attribute, value=value, by=by, timeout=timeout)
+        self.wait_for_attribute(selector, attribute, value=value, by=by, timeout=timeout, msg=msg)
         if self.demo_mode and not self.__is_shadow_selector(selector) and self.is_element_visible(selector, by=by):
             a_a = "ASSERT ATTRIBUTE"
             i_n = "in"
@@ -6456,7 +6462,7 @@ class BaseCase(unittest.TestCase):
                     by.upper(),
                     selector,
                 )
-            self.__highlight_with_assert_success(messenger_post, selector, by)
+            self.__highlight_with_assert_success(messenger_post, selector, by, msg)
         if self.recorder_mode and self.__current_url_is_recordable():
             if self.get_session_storage_item("pause_recorder") == "no":
                 time_stamp = self.execute_script("return Date.now();")
@@ -7512,7 +7518,7 @@ class BaseCase(unittest.TestCase):
             timeout = self.__get_new_timeout(timeout)
         return self.hover(selector, by=by, timeout=timeout)
 
-    def wait_for_element_visible(self, selector, by="css selector", timeout=None):
+    def wait_for_element_visible(self, selector, by="css selector", timeout=None, msg=None):
         """Same as self.wait_for_element()"""
         self.__check_scope()
         self.__skip_if_esc()
@@ -7530,9 +7536,10 @@ class BaseCase(unittest.TestCase):
             by,
             timeout=timeout,
             original_selector=original_selector,
+            msg=msg,
         )
 
-    def wait_for_element_clickable(self, selector, by="css selector", timeout=None):
+    def wait_for_element_clickable(self, selector, by="css selector", timeout=None, msg=None):
         """Waits for the element to be clickable, but does NOT click it."""
         self.__check_scope()
         if not timeout:
@@ -7550,9 +7557,10 @@ class BaseCase(unittest.TestCase):
             by,
             timeout=timeout,
             original_selector=original_selector,
+            msg=msg,
         )
 
-    def wait_for_element_not_present(self, selector, by="css selector", timeout=None):
+    def wait_for_element_not_present(self, selector, by="css selector", timeout=None, msg=None):
         """Same as self.wait_for_element_absent()
         Waits for an element to no longer appear in the HTML of a page.
         A hidden element still counts as appearing in the page HTML.
@@ -7571,6 +7579,7 @@ class BaseCase(unittest.TestCase):
             by,
             timeout=timeout,
             original_selector=original_selector,
+            msg=msg,
         )
 
     def check_element_present(self, selector, by="css selector", timeout=None):
@@ -7628,7 +7637,7 @@ class BaseCase(unittest.TestCase):
             timeout = self.__get_new_timeout(timeout)
         self.assert_link_text(link_text, timeout=timeout)
 
-    def assert_element_not_present(self, selector, by="css selector", timeout=None):
+    def assert_element_not_present(self, selector, by="css selector", timeout=None, msg=None):
         """Same as self.assert_element_absent()
         Will raise an exception if the element stays present.
         A hidden element counts as a present element, which fails this assert.
@@ -7641,7 +7650,7 @@ class BaseCase(unittest.TestCase):
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
-        self.wait_for_element_absent(selector, by=by, timeout=timeout)
+        self.wait_for_element_absent(selector, by=by, timeout=timeout, msg=msg)
         return True
 
     def get_google_auth_password(self, totp_key=None):
@@ -7939,7 +7948,7 @@ class BaseCase(unittest.TestCase):
             original_selector=original_selector,
         )
 
-    def wait_for_element(self, selector, by="css selector", timeout=None):
+    def wait_for_element(self, selector, by="css selector", timeout=None, msg=None):
         """Waits for an element to appear in the HTML of a page.
         The element must be visible (it cannot be hidden)."""
         self.__check_scope()
@@ -7959,7 +7968,7 @@ class BaseCase(unittest.TestCase):
                 self.__extra_actions.append(action)
         if self.__is_shadow_selector(selector):
             return self.__get_shadow_element(selector, timeout)
-        return page_actions.wait_for_element_visible(self.driver, selector, by, timeout)
+        return page_actions.wait_for_element_visible(self.driver, selector, by, timeout, msg=msg)
 
     def get_element(self, selector, by="css selector", timeout=None):
         """Same as wait_for_element_present() - returns the element.
@@ -8062,11 +8071,11 @@ class BaseCase(unittest.TestCase):
             continue
         return True
 
-    def find_element(self, selector, by="css selector", timeout=None):
+    def find_element(self, selector, by="css selector", timeout=None, msg=None):
         """Same as wait_for_element_visible() - returns the element"""
-        return self.wait_for_element_visible(selector, by=by, timeout=timeout)
+        return self.wait_for_element_visible(selector, by=by, timeout=timeout, msg=msg)
 
-    def assert_element(self, selector, by="css selector", timeout=None):
+    def assert_element(self, selector, by="css selector", timeout=None, msg=None):
         """Similar to wait_for_element_visible(), but returns nothing.
         As above, will raise an exception if nothing can be found.
         Returns True if successful. Default timeout = SMALL_TIMEOUT."""
@@ -8076,12 +8085,12 @@ class BaseCase(unittest.TestCase):
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
         if isinstance(selector, list):
-            self.assert_elements(selector, by=by, timeout=timeout)
+            self.assert_elements(selector, by=by, timeout=timeout, msg=msg)
             return True
         if self.__is_shadow_selector(selector):
             self.__assert_shadow_element_visible(selector)
             return True
-        self.wait_for_element_visible(selector, by=by, timeout=timeout)
+        self.wait_for_element_visible(selector, by=by, timeout=timeout, msg=msg)
         original_selector = selector
         if self.demo_mode:
             selector, by = self.__recalculate_selector(selector, by, xp_ok=False)
@@ -8109,7 +8118,7 @@ class BaseCase(unittest.TestCase):
         self.assert_element(selector, by=by, timeout=timeout)
         return True
 
-    def assert_elements(self, *args, **kwargs):
+    def assert_elements(self, msg, *args, **kwargs):
         """Similar to self.assert_element(), but can assert multiple elements.
         The input is a list of elements.
         Optional kwargs include "by" and "timeout" (used by all selectors).
@@ -8153,7 +8162,7 @@ class BaseCase(unittest.TestCase):
             if self.__is_shadow_selector(selector):
                 self.__assert_shadow_element_visible(selector)
                 continue
-            self.wait_for_element_visible(selector, by=by, timeout=timeout)
+            self.wait_for_element_visible(selector, by=by, timeout=timeout, msg=msg)
             if self.demo_mode:
                 selector, by = self.__recalculate_selector(selector, by)
                 a_t = "ASSERT"
@@ -8181,7 +8190,7 @@ class BaseCase(unittest.TestCase):
             return self.__wait_for_shadow_text_visible(text, selector, timeout)
         return page_actions.wait_for_text_visible(self.driver, text, selector, by, timeout)
 
-    def wait_for_exact_text_visible(self, text, selector="html", by="css selector", timeout=None):
+    def wait_for_exact_text_visible(self, text, selector="html", by="css selector", timeout=None, msg=None):
         self.__check_scope()
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
@@ -8190,7 +8199,7 @@ class BaseCase(unittest.TestCase):
         selector, by = self.__recalculate_selector(selector, by)
         if self.__is_shadow_selector(selector):
             return self.__wait_for_exact_shadow_text_visible(text, selector, timeout)
-        return page_actions.wait_for_exact_text_visible(self.driver, text, selector, by, timeout)
+        return page_actions.wait_for_exact_text_visible(self.driver, text, selector, by, timeout, msg)
 
     def wait_for_non_empty_text_visible(self, selector="html", by="css selector", timeout=None):
         """Searches for any text in the element of the given selector.
@@ -8510,7 +8519,7 @@ class BaseCase(unittest.TestCase):
 
     ############
 
-    def wait_for_element_absent(self, selector, by="css selector", timeout=None):
+    def wait_for_element_absent(self, selector, by="css selector", timeout=None, msg=None):
         """Waits for an element to no longer appear in the HTML of a page.
         A hidden element counts as a present element, which fails this assert.
         If waiting for elements to be hidden instead of nonexistent,
@@ -8522,15 +8531,9 @@ class BaseCase(unittest.TestCase):
             timeout = self.__get_new_timeout(timeout)
         original_selector = selector
         selector, by = self.__recalculate_selector(selector, by)
-        return page_actions.wait_for_element_absent(
-            self.driver,
-            selector,
-            by,
-            timeout=timeout,
-            original_selector=original_selector,
-        )
+        return page_actions.wait_for_element_absent(self.driver, selector, by, timeout=timeout, original_selector=original_selector, msg=msg)
 
-    def assert_element_absent(self, selector, by="css selector", timeout=None):
+    def assert_element_absent(self, selector, by="css selector", timeout=None, msg=None):
         """Similar to wait_for_element_absent()
         As above, will raise an exception if the element stays present.
         A hidden element counts as a present element, which fails this assert.
@@ -8543,12 +8546,12 @@ class BaseCase(unittest.TestCase):
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
-        self.wait_for_element_absent(selector, by=by, timeout=timeout)
+        self.wait_for_element_absent(selector, by=by, timeout=timeout, msg=msg)
         return True
 
     ############
 
-    def wait_for_element_not_visible(self, selector, by="css selector", timeout=None):
+    def wait_for_element_not_visible(self, selector, by="css selector", timeout=None, msg=None):
         """Waits for an element to no longer be visible on a page.
         The element can be non-existent in the HTML or hidden on the page
         to qualify as not visible."""
@@ -8565,9 +8568,10 @@ class BaseCase(unittest.TestCase):
             by,
             timeout=timeout,
             original_selector=original_selector,
+            msg=msg,
         )
 
-    def assert_element_not_visible(self, selector, by="css selector", timeout=None):
+    def assert_element_not_visible(self, selector, by="css selector", timeout=None, msg=None):
         """Similar to wait_for_element_not_visible()
         As above, will raise an exception if the element stays visible.
         Returns True if successful. Default timeout = SMALL_TIMEOUT."""
@@ -8576,7 +8580,7 @@ class BaseCase(unittest.TestCase):
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
-        self.wait_for_element_not_visible(selector, by=by, timeout=timeout)
+        self.wait_for_element_not_visible(selector, by=by, timeout=timeout, msg=msg)
         if self.recorder_mode and self.__current_url_is_recordable():
             if self.get_session_storage_item("pause_recorder") == "no":
                 time_stamp = self.execute_script("return Date.now();")
@@ -8645,16 +8649,16 @@ class BaseCase(unittest.TestCase):
 
     ############
 
-    def wait_for_attribute_not_present(self, selector, attribute, value=None, by="css selector", timeout=None):
+    def wait_for_attribute_not_present(self, selector, attribute, value=None, by="css selector", timeout=None, msg=None):
         self.__check_scope()
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
         selector, by = self.__recalculate_selector(selector, by)
-        return page_actions.wait_for_attribute_not_present(self.driver, selector, attribute, value, by, timeout)
+        return page_actions.wait_for_attribute_not_present(self.driver, selector, attribute, value, by, timeout, msg)
 
-    def assert_attribute_not_present(self, selector, attribute, value=None, by="css selector", timeout=None):
+    def assert_attribute_not_present(self, selector, attribute, value=None, by="css selector", timeout=None, msg=None):
         """Similar to wait_for_attribute_not_present()
         Raises an exception if the attribute is still present after timeout.
         Returns True if successful. Default timeout = SMALL_TIMEOUT."""
@@ -8663,7 +8667,7 @@ class BaseCase(unittest.TestCase):
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
-        return self.wait_for_attribute_not_present(selector, attribute, value=value, by=by, timeout=timeout)
+        return self.wait_for_attribute_not_present(selector, attribute, value=value, by=by, timeout=timeout, msg=msg)
 
     ############
 
@@ -11835,9 +11839,9 @@ class BaseCase(unittest.TestCase):
             duration = 0.75
         js_utils.highlight_with_jquery_2(self.driver, message, selector, o_bs, duration)
 
-    def __highlight_with_assert_success(self, message, selector, by="css selector"):
+    def __highlight_with_assert_success(self, message, selector, by="css selector", msg=None):
         selector, by = self.__recalculate_selector(selector, by, xp_ok=False)
-        element = self.wait_for_element_visible(selector, by=by, timeout=settings.SMALL_TIMEOUT)
+        element = self.wait_for_element_visible(selector, by=by, timeout=settings.SMALL_TIMEOUT, msg=msg)
         try:
             if self.browser != "safari":
                 scroll_distance = js_utils.get_scroll_distance_to_element(self.driver, element)
@@ -11850,7 +11854,7 @@ class BaseCase(unittest.TestCase):
         except Exception:
             self.wait_for_ready_state_complete()
             time.sleep(0.12)
-            element = self.wait_for_element_visible(selector, by=by, timeout=settings.SMALL_TIMEOUT)
+            element = self.wait_for_element_visible(selector, by=by, timeout=settings.SMALL_TIMEOUT, msg=msg)
             self.__slow_scroll_to_element(element)
         use_element_directly = False
         try:
@@ -11865,7 +11869,7 @@ class BaseCase(unittest.TestCase):
         except Exception:
             self.wait_for_ready_state_complete()
             time.sleep(0.12)
-            element = self.wait_for_element_visible(selector, by="css selector", timeout=settings.SMALL_TIMEOUT)
+            element = self.wait_for_element_visible(selector, by="css selector", timeout=settings.SMALL_TIMEOUT, msg=msg)
             style = element.get_attribute("style")
         if style:
             if "box-shadow: " in style:
@@ -12380,7 +12384,7 @@ class BaseCase(unittest.TestCase):
         element = self.__get_shadow_element(selector, timeout=timeout, must_be_visible=True)
         return element
 
-    def __wait_for_shadow_attribute_present(self, selector, attribute, value=None, timeout=None):
+    def __wait_for_shadow_attribute_present(self, selector, attribute, value=None, timeout=None, msg=None):
         element = self.__get_shadow_element(selector, timeout=timeout)
         actual_value = element.get_attribute(attribute)
         plural = "s"
@@ -12393,7 +12397,7 @@ class BaseCase(unittest.TestCase):
             else:
                 # The element does not have the attribute
                 message = "Expected attribute {%s} of element {%s} " "was not present after %s second%s!" % (attribute, selector, timeout, plural)
-                page_actions.timeout_exception("NoSuchAttributeException", message)
+                page_actions.timeout_exception("NoSuchAttributeException", msg or message)
         else:
             if actual_value == value:
                 return element
@@ -12411,7 +12415,7 @@ class BaseCase(unittest.TestCase):
                         actual_value,
                     )
                 )
-                page_actions.timeout_exception("NoSuchAttributeException", message)
+                page_actions.timeout_exception("NoSuchAttributeException", msg or message)
 
     def __assert_shadow_element_present(self, selector):
         self.__get_shadow_element(selector)
@@ -13950,29 +13954,31 @@ class BaseCase(unittest.TestCase):
                     self.testcase_manager.update_testcase_log_url(data_payload)
         else:
             # (Pynose / Behave / Pure Python)
+            failed_steps = []
             if hasattr(self, "is_behave") and self.is_behave:
                 import colorama
 
-                if ps_config.behave_scenario.status.name == "failed":
+                if hasattr(ps_config, "behave_context"):
+                    context = ps_config.behave_context
+                    if hasattr(context, "failed_steps") and context.failed_steps:
+                        failed_steps = context.failed_steps  # Collect failed steps
+                        ps_config.behave_scenario.set_status(Status.failed)
+
+                if ps_config.behave_scenario.status.name == "failed" or failed_steps:
+                    ps_config.behave_scenario.set_status(Status.failed)
                     has_exception = True
                     ps_config._has_exception = True
-                    msg = "   ❌ Scenario Failed!  (Skipping remaining steps:)"
-                    if is_windows:
-                        c1 = colorama.Fore.RED + colorama.Back.LIGHTRED_EX
-                        cr = colorama.Style.RESET_ALL
-                        if hasattr(colorama, "just_fix_windows_console"):
-                            colorama.just_fix_windows_console()
-                        msg = msg.replace("❌", c1 + "><" + cr)
-                    print(msg)
+                    msg = "   ❌ Scenario Failed!"
                 else:
                     msg = "   ✅ Scenario Passed!"
-                    if is_windows:
-                        c2 = colorama.Fore.GREEN + colorama.Back.LIGHTGREEN_EX
-                        cr = colorama.Style.RESET_ALL
-                        if hasattr(colorama, "just_fix_windows_console"):
-                            colorama.just_fix_windows_console()
-                        msg = msg.replace("✅", c2 + "<>" + cr)
-                    print(msg)
+                if is_windows:
+                    c1 = colorama.Fore.RED + colorama.Back.LIGHTRED_EX
+                    c2 = colorama.Fore.GREEN + colorama.Back.LIGHTGREEN_EX
+                    cr = colorama.Style.RESET_ALL
+                    if hasattr(colorama, "just_fix_windows_console"):
+                        colorama.just_fix_windows_console()
+                    msg = msg.replace("❌", c1 + "><" + cr) if "Failed" in msg else msg.replace("✅", c2 + "<>" + cr)
+                print(msg)
                 if self.dashboard:
                     self.__process_dashboard(has_exception)
             if has_exception:
@@ -13984,7 +13990,8 @@ class BaseCase(unittest.TestCase):
                     test_logpath,
                     self.driver,
                     self.browser,
-                    self.__last_page_url,
+                    url=self.__last_page_url,
+                    failed_steps=failed_steps,
                 )
                 if len(self._drivers_list) > 0:
                     if not self.__last_page_screenshot_png:

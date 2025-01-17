@@ -15,7 +15,7 @@ self.get(url)
 # If the url parameter is a URL: Perform self.open(url)
 # Otherwise: return self.get_element(URL_AS_A_SELECTOR)
 
-self.click(selector, by="css selector", timeout=None, delay=0, scroll=True)
+self.click(selector, by="css selector", timeout=None, delay=0, scroll=True, msg=None)
 
 self.slow_click(selector, by="css selector", timeout=None)
 
@@ -108,7 +108,7 @@ self.click_partial_link(partial_link_text, timeout=None)
 # Duplicates:
 # self.click_partial_link_text(partial_link_text, timeout=None)
 
-self.get_text(selector="html", by="css selector", timeout=None)
+self.get_text(selector="html", by="css selector", timeout=None, msg=None)
 
 self.get_attribute(selector, attribute, by="css selector", timeout=None, hard_fail=True)
 
@@ -531,9 +531,9 @@ self.assert_not_in(first, second, msg=None)
 
 self.assert_raises(*args, **kwargs)
 
-self.wait_for_attribute(selector, attribute, value=None, by="css selector", timeout=None)
+self.wait_for_attribute(selector, attribute, value=None, by="css selector", timeout=None, msg=None)
 
-self.assert_attribute(selector, attribute, value=None, by="css selector", timeout=None)
+self.assert_attribute(selector, attribute, value=None, by="css selector", timeout=None, msg=None)
 
 self.assert_title(title)
 
@@ -788,7 +788,7 @@ self.find_element(selector, by="css selector", timeout=None)
 # self.wait_for_element(selector, by="css selector", timeout=None)
 # self.wait_for_element_visible(selector, by="css selector", timeout=None)
 
-self.assert_element(selector, by="css selector", timeout=None)
+self.assert_element(selector, by="css selector", timeout=None, msg=None)
 # Duplicates:
 # self.assert_element_visible(selector, by="css selector", timeout=None)
 
@@ -844,7 +844,7 @@ self.assert_partial_link_text(partial_link_text, timeout=None)
 
 ############
 
-self.wait_for_element_absent(selector, by="css selector", timeout=None)
+self.wait_for_element_absent(selector, by="css selector", timeout=None, msg=None)
 # Duplicates:
 # self.wait_for_element_not_present(selector, by="css selector", timeout=None)
 
@@ -854,13 +854,13 @@ self.assert_element_absent(selector, by="css selector", timeout=None)
 
 ############
 
-self.wait_for_element_clickable(selector, by="css selector", timeout=None)
+self.wait_for_element_clickable(selector, by="css selector", timeout=None, msg=None)
 
 ############
 
-self.wait_for_element_not_visible(selector, by="css selector", timeout=None)
+self.wait_for_element_not_visible(selector, by="css selector", timeout=None, msg=None)
 
-self.assert_element_not_visible(selector, by="css selector", timeout=None)
+self.assert_element_not_visible(selector, by="css selector", timeout=None, msg=None)
 
 ############
 
@@ -877,10 +877,10 @@ self.assert_non_empty_text(selector="html", by="css selector", timeout=None)
 ############
 
 self.wait_for_attribute_not_present(
-    selector, attribute, value=None, by="css selector", timeout=None)
+    selector, attribute, value=None, by="css selector", timeout=None, msg=None)
 
 self.assert_attribute_not_present(
-    selector, attribute, value=None, by="css selector", timeout=None)
+    selector, attribute, value=None, by="css selector", timeout=None, msg=None)
 
 ############
 
@@ -1050,6 +1050,8 @@ driver.get_attribute(selector, attribute)
 driver.get_page_source()
 
 driver.get_title()
+
+driver.get_parent(selector)
 
 driver.switch_to_frame(frame="iframe")
 

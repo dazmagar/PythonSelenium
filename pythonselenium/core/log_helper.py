@@ -3,6 +3,7 @@ import os
 import shutil
 import sys
 import time
+
 from pythonselenium import config as ps_config
 from pythonselenium.config import settings
 from pythonselenium.fixtures import constants
@@ -18,10 +19,7 @@ def log_screenshot(test_logpath, driver, screenshot=None, get=False):
     screenshot_path = os.path.join(test_logpath, screenshot_name)
     screenshot_skipped = constants.Warnings.SCREENSHOT_SKIPPED
     screenshot_warning = constants.Warnings.SCREENSHOT_UNDEFINED
-    if (
-        (hasattr(ps_config, "no_screenshot") and ps_config.no_screenshot)
-        or screenshot == screenshot_skipped
-    ):
+    if (hasattr(ps_config, "no_screenshot") and ps_config.no_screenshot) or screenshot == screenshot_skipped:
         if get:
             return screenshot
         return
@@ -80,11 +78,7 @@ def get_master_time():
 
 
 def get_browser_version(driver):
-    if (
-        python3_11_or_newer
-        and py311_patch2
-        and hasattr(ps_config, "_browser_version")
-    ):
+    if python3_11_or_newer and py311_patch2 and hasattr(ps_config, "_browser_version"):
         return ps_config._browser_version
     driver_capabilities = driver.capabilities
     if "version" in driver_capabilities:
@@ -113,7 +107,7 @@ def get_driver_name_and_version(driver, browser):
         return None
 
 
-def log_test_failure_data(test, test_logpath, driver, browser, url=None):
+def log_test_failure_data(test, test_logpath, driver, browser, url=None, failed_steps=None):
     import traceback
 
     browser_displayed = browser
@@ -128,9 +122,7 @@ def log_test_failure_data(test, test_logpath, driver, browser, url=None):
     except Exception:
         pass
     try:
-        driver_name, driver_version = get_driver_name_and_version(
-            driver, browser
-        )
+        driver_name, driver_version = get_driver_name_and_version(driver, browser)
     except Exception:
         pass
     try:
@@ -165,9 +157,7 @@ def log_test_failure_data(test, test_logpath, driver, browser, url=None):
     test_id = get_test_id(test)  # pytest runnable display_id (with the "::")
     data_to_save = []
     data_to_save.append("%s" % test_id)
-    data_to_save.append(
-        "--------------------------------------------------------------------"
-    )
+    data_to_save.append("--------------------------------------------------------------------")
     data_to_save.append("Last Page: %s" % last_page)
     data_to_save.append(" Duration: %s" % duration)
     data_to_save.append("  Browser: %s" % browser_displayed)
@@ -175,20 +165,12 @@ def log_test_failure_data(test, test_logpath, driver, browser, url=None):
     data_to_save.append("Timestamp: %s" % timestamp)
     data_to_save.append("     Date: %s" % the_date)
     data_to_save.append("     Time: %s" % the_time)
-    data_to_save.append(
-        "--------------------------------------------------------------------"
-    )
-    if (
-        hasattr(test, "_outcome")
-        and hasattr(test._outcome, "errors")
-        and test._outcome.errors
-    ):
+    data_to_save.append("--------------------------------------------------------------------")
+    if hasattr(test, "_outcome") and hasattr(test._outcome, "errors") and test._outcome.errors:
         try:
             exc_message = test._outcome.errors[0][1][1]
             traceback_address = test._outcome.errors[0][1][2]
-            traceback_list = traceback.format_list(
-                traceback.extract_tb(traceback_address)[1:]
-            )
+            traceback_list = traceback.format_list(traceback.extract_tb(traceback_address)[1:])
             updated_list = []
             counter = 0
             for traceback_item in traceback_list:
@@ -196,11 +178,7 @@ def log_test_failure_data(test, test_logpath, driver, browser, url=None):
                     counter = 1
                     updated_list.append(traceback_item)  # In case not cleared
                     continue
-                elif (
-                    ", in _callTestMethod" in traceback_item.strip()
-                    and "method()" in traceback_item.strip()
-                    and counter == 1
-                ):
+                elif ", in _callTestMethod" in traceback_item.strip() and "method()" in traceback_item.strip() and counter == 1:
                     counter = 0
                     updated_list = []
                     continue
@@ -215,6 +193,10 @@ def log_test_failure_data(test, test_logpath, driver, browser, url=None):
         traceback_message = str(traceback_message).strip()
         data_to_save.append("Traceback:\n  %s" % traceback_message)
         data_to_save.append("Exception: %s" % exc_message)
+    elif failed_steps:  # Check if failed_steps is provided
+        data_to_save.append("\nFailed Steps:")
+        for step in failed_steps:
+            data_to_save.append(f"Step: {step['step']} (Line {step['line']}): {step['error_message']}\n  {step['stack_trace']}")
     else:
         traceback_message = None
         if hasattr(test, "is_behave") and test.is_behave:
@@ -222,9 +204,7 @@ def log_test_failure_data(test, test_logpath, driver, browser, url=None):
                 if ps_config.behave_step.error_message:
                     traceback_message = ps_config.behave_step.error_message
         else:
-            format_exception = traceback.format_exception(
-                sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]
-            )
+            format_exception = traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
             if format_exception:
                 updated_list = []
                 for line in format_exception:
@@ -233,21 +213,13 @@ def log_test_failure_data(test, test_logpath, driver, browser, url=None):
                     updated_list.append(line)
                 format_exception = updated_list
             traceback_message = "".join(format_exception)
-        if (
-            not traceback_message
-            or len(str(traceback_message)) < 30
-            or traceback_message.endswith("StopIteration\n")
-        ):
+        if not traceback_message or len(str(traceback_message)) < 30 or traceback_message.endswith("StopIteration\n"):
             good_stack = []
             the_stacks = []
             if hasattr(sys, "last_traceback"):
-                the_stacks = traceback.format_list(
-                    traceback.extract_tb(sys.last_traceback)
-                )
+                the_stacks = traceback.format_list(traceback.extract_tb(sys.last_traceback))
             elif hasattr(ps_config, "_excinfo_tb"):
-                the_stacks = traceback.format_list(
-                    traceback.extract_tb(ps_config._excinfo_tb)
-                )
+                the_stacks = traceback.format_list(traceback.extract_tb(ps_config._excinfo_tb))
             else:
                 message = None
                 if hasattr(test, "is_behave") and test.is_behave:
@@ -302,9 +274,7 @@ def log_skipped_test_data(test, test_logpath, driver, browser, reason):
     except Exception:
         pass
     try:
-        driver_name, driver_version = get_driver_name_and_version(
-            driver, browser
-        )
+        driver_name, driver_version = get_driver_name_and_version(driver, browser)
     except Exception:
         pass
     if browser_version:
@@ -328,18 +298,14 @@ def log_skipped_test_data(test, test_logpath, driver, browser, reason):
     test_id = get_test_id(test)  # pytest runnable display_id (with the "::")
     data_to_save = []
     data_to_save.append("%s" % test_id)
-    data_to_save.append(
-        "--------------------------------------------------------------------"
-    )
+    data_to_save.append("--------------------------------------------------------------------")
     data_to_save.append("       Outcome: SKIPPED")
     data_to_save.append("       Browser: %s" % browser_displayed)
     data_to_save.append("        Driver: %s" % driver_displayed)
     data_to_save.append("     Timestamp: %s" % timestamp)
     data_to_save.append("          Date: %s" % the_date)
     data_to_save.append("          Time: %s" % the_time)
-    data_to_save.append(
-        "--------------------------------------------------------------------"
-    )
+    data_to_save.append("--------------------------------------------------------------------")
     data_to_save.append(" * Skip Reason: %s" % reason)
     data_to_save.append("")
     file_path = os.path.join(test_logpath, "skip_reason.txt")
@@ -360,14 +326,7 @@ def log_page_source(test_logpath, driver, source=None):
             source = constants.Warnings.PAGE_SOURCE_UNDEFINED
             page_source = constants.Warnings.PAGE_SOURCE_UNDEFINED
     if source == constants.Warnings.PAGE_SOURCE_UNDEFINED:
-        page_source = (
-            "<h3>Warning: "
-            + source
-            + (
-                "</h3>\n<h4>The browser window was either unreachable, "
-                "unresponsive, or closed prematurely!</h4>"
-            )
-        )
+        page_source = "<h3>Warning: " + source + ("</h3>\n<h4>The browser window was either unreachable, " "unresponsive, or closed prematurely!</h4>")
     try:
         if not os.path.exists(test_logpath):
             os.makedirs(test_logpath)
@@ -493,9 +452,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
         if os.path.isdir(s):
             copytree(s, d, symlinks, ignore)
         else:
-            if not os.path.exists(d) or (
-                os.stat(s).st_mtime - os.stat(d).st_mtime > 1
-            ):
+            if not os.path.exists(d) or (os.stat(s).st_mtime - os.stat(d).st_mtime > 1):
                 shutil.copy2(s, d)
 
 

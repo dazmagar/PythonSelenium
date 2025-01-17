@@ -1,9 +1,13 @@
 import logging
 import math
 import time
+import traceback
+import typing as t
 import warnings
 from contextlib import contextmanager
 from functools import wraps
+
+from behave.model import Status
 
 from pythonselenium.common.exceptions import TimeoutException
 
@@ -207,26 +211,77 @@ def deprecated(message=None):
     return decorated_method_to_deprecate
 
 
+class Timer:
+    """
+    A helper class that tracks an expiration time.
+
+    :param end_time: Monotonic time (in seconds) when the timer expires.
+    :ivar _end_time: Internal storage of the expiration time.
+    """
+
+    def __init__(self, end_time: float):
+        self._end_time = end_time
+
+    @property
+    def expired(self) -> bool:
+        """
+        Check if the current monotonic time is past the stored end time.
+
+        :return: True if time has expired; otherwise False.
+        """
+        return time.monotonic() > self._end_time
+
+
 @contextmanager
-def timeout(limit):
-    """Context manager for limiting execution time of a code block.
+def timeout(limit: float) -> t.Generator[Timer, None, None]:
+    """
+    Provide a Timer object to monitor remaining time within a context.
+
+    :param limit: Number of seconds before the timer expires.
+    :return: Yields a Timer instance with the `expired` property.
+    :raises ValueError: If `limit` is not a positive number.
 
     Usage example:
-        with timeout(600) as t:
-            while True:
-                # code ...
-                if t.expired:
-                    raise AssertionError(f"Timeout: 600s")
+        with timeout(10) as t:
+            while not t.expired:
+                # some operations...
+                pass
+            if t.expired:
+                raise TimeoutError("Time limit exceeded!")
     """
     if limit <= 0:
         raise ValueError("Limit must be a positive number.")
+    end_time = time.monotonic() + limit
+    yield Timer(end_time)
 
-    start_time = time.time()
-    end_time = start_time + limit
 
-    class Timer:
-        @property
-        def expired(self):
-            return time.time() > end_time
+def continue_on_fail(func):
+    """
+    Decorator to suppress exceptions and allow continuation.
+    Records errors in context for behave steps, including stack trace.
+    Marks errors as non-critical with additional information.
+    """
 
-    yield Timer()
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        context = kwargs.get("context", args[0] if args else None)
+        if context:
+            context.current_step_continue_on_fail = True
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            if context and hasattr(context, "behave_step"):
+                failed_step = {
+                    "step": context.behave_step.name,
+                    "line": getattr(context.behave_step, "line", "NA"),
+                    "error_message": f"(Non-critical, @continue_on_fail) {str(e)}",
+                    "stack_trace": traceback.format_exc(),
+                }
+                if not hasattr(context, "failed_steps"):
+                    context.failed_steps = []
+                context.failed_steps.append(failed_step)
+                context.behave_step.status = Status.failed
+            return None
+
+    wrapper.continue_on_fail = True
+    return wrapper
